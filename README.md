@@ -43,6 +43,7 @@ All Odoo configuration is generated at container startup from environment variab
 | `ODOO_PROXY_MODE` | `True` | Enable when behind a reverse proxy |
 | `ODOO_WORKERS` | `4` | Number of worker processes |
 | `ODOO_MAX_CRON_THREADS` | `2` | Number of cron worker threads |
+| `ODOO_HTTP_INTERFACE` | `::` | Bind address (`::` = IPv4+IPv6 dualstack) |
 | `ODOO_XMLRPC_PORT` | `8069` | HTTP port |
 | `ODOO_GEVENT_PORT` | `8072` | Longpolling/WebSocket port |
 | `ODOO_WITHOUT_DEMO` | `all` | Disable demo data |

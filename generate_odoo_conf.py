@@ -45,6 +45,7 @@ OPTIONS = [
     ("unaccent", "ODOO_UNACCENT", "True"),
     ("without_demo", "ODOO_WITHOUT_DEMO", "all"),
     # Network
+    ("http_interface", "ODOO_HTTP_INTERFACE", "::"),  # :: = dualstack (IPv4+IPv6)
     ("xmlrpc", "ODOO_XMLRPC", "True"),
     ("xmlrpc_port", "ODOO_XMLRPC_PORT", "8069"),
     ("gevent_port", "ODOO_GEVENT_PORT", "8072"),
