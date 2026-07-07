@@ -52,6 +52,7 @@ RUN apt-get update && \
     python3 \
     python3-asn1crypto \
     python3-babel \
+    python3-bs4 \
     python3-cbor2 \
     python3-cffi \
     python3-chardet \
