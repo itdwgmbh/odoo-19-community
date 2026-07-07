@@ -4,7 +4,7 @@ services:
   web:
     build: .
     # Or use pre-built image:
-    # image: ghcr.io/itdwgmbh/odoo-18:latest
+    # image: ghcr.io/itdwgmbh/odoo-19-community:latest
     depends_on:
       - db
     ports:

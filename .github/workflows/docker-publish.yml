@@ -50,7 +50,7 @@ jobs:
       - name: Fetch Odoo version from nightly
         id: odoo
         run: |
-          ODOO_VERSION=$(curl -sfL https://nightly.odoo.com/18.0/nightly/deb/odoo_18.0.latest_amd64.changes | grep -E '^Version:' | awk '{print $2}')
+          ODOO_VERSION=$(curl -sfL https://nightly.odoo.com/19.0/nightly/deb/odoo_19.0.latest_amd64.changes | grep -E '^Version:' | awk '{print $2}')
           echo "ODOO_VERSION=${ODOO_VERSION}" >> $GITHUB_OUTPUT
           echo "Odoo version: ${ODOO_VERSION}"
 

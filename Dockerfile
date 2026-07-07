@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /opt/odoo/src && \
-    curl -fsSL https://api.github.com/repos/odoo/odoo/tarball/18.0 | \
+    curl -fsSL https://api.github.com/repos/odoo/odoo/tarball/19.0 | \
     tar -xz --strip-components=1 -C /opt/odoo/src
 
 COPY ./requirements.txt /tmp/
@@ -33,12 +33,12 @@ ARG BUILD_DATE
 ARG ODOO_VERSION
 ARG DEBIAN_FRONTEND=noninteractive
 
-LABEL org.opencontainers.image.title="Odoo 18 Community" \
-      org.opencontainers.image.description="Odoo 18 Community Edition" \
+LABEL org.opencontainers.image.title="Odoo 19 Community" \
+      org.opencontainers.image.description="Odoo 19 Community Edition" \
       org.opencontainers.image.version="${ODOO_VERSION}" \
       org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.authors="IT-DW GmbH <oss@it-dw.com>" \
-      org.opencontainers.image.source="https://github.com/itdwgmbh/odoo-18"
+      org.opencontainers.image.source="https://github.com/itdwgmbh/odoo-19-community"
 
 ENV LANG=C.UTF-8 \
     PYTHONUNBUFFERED=1 \
@@ -57,7 +57,6 @@ RUN apt-get update && \
     python3-chardet \
     python3-cryptography \
     python3-dateutil \
-    python3-decorator \
     python3-docutils \
     python3-docx \
     python3-gevent \
@@ -103,7 +102,7 @@ RUN apt-get update && \
     tzdata \
     xfonts-75dpi \
     xfonts-base && \
-    # wkhtmltopdf (bookworm build — only version compatible with Odoo 18)
+    # wkhtmltopdf (bookworm build — only version compatible with Odoo 19)
     dpkg -i /tmp/wkhtmltox.deb && \
     rm /tmp/wkhtmltox.deb && \
     apt-get clean && \

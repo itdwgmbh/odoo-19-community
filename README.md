@@ -1,11 +1,11 @@
-# Odoo 18 Community Docker Image
+# Odoo 19 Community Docker Image
 
-Multi-arch (amd64/arm64) Docker image for Odoo 18 Community Edition, built on Debian Trixie. Configuration is driven entirely by environment variables — no manual config file editing needed.
+Multi-arch (amd64/arm64) Docker image for Odoo 19 Community Edition, built on Debian Trixie. Configuration is driven entirely by environment variables — no manual config file editing needed.
 
 ## Quick Start
 
 ```bash
-docker pull ghcr.io/itdwgmbh/odoo-18:latest
+docker pull ghcr.io/itdwgmbh/odoo-19-community:latest
 ```
 
 ```bash
@@ -13,7 +13,7 @@ docker run -d \
   -p 8069:8069 \
   -e DB_HOST=your-postgres-host \
   -e DB_PASSWORD=your-password \
-  ghcr.io/itdwgmbh/odoo-18:latest
+  ghcr.io/itdwgmbh/odoo-19-community:latest
 ```
 
 Or use `docker compose up` to start Odoo with PostgreSQL locally.
@@ -103,15 +103,15 @@ The `_FILE` variant takes precedence over the plain variable.
 ## Building
 
 ```bash
-docker build -t odoo-18 .
+docker build -t odoo-19 .
 ```
 
-The image fetches the latest Odoo 18 nightly source during build.
+The image fetches the latest Odoo 19 nightly source during build.
 
 ## Tags
 
 - `latest` — most recent build
-- `18.0.YYYYMMDD` — pinned to a specific Odoo nightly version
+- `19.0.YYYYMMDD` — pinned to a specific Odoo nightly version
 - `sha-<commit>` — pinned to a specific git commit
 
 ## License
