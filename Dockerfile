@@ -47,6 +47,16 @@ ENV LANG=C.UTF-8 \
 
 COPY vendor/wkhtmltox_${TARGETARCH}.deb /tmp/wkhtmltox.deb
 
+# PostgreSQL 18 client from PGDG: trixie ships 17, but pg_dump must be at
+# least the server major it dumps from (deployments run PostgreSQL 18).
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates curl gnupg && \
+    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+      | gpg --dearmor -o /usr/share/keyrings/pgdg.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] http://apt.postgresql.org/pub/repos/apt trixie-pgdg main" \
+      > /etc/apt/sources.list.d/pgdg.list && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     python3 \
@@ -99,7 +109,7 @@ RUN apt-get update && \
     fontconfig \
     fonts-dejavu-core \
     gosu \
-    postgresql-client-17 \
+    postgresql-client-18 \
     tzdata \
     xfonts-75dpi \
     xfonts-base && \
