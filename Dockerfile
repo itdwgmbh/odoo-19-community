@@ -59,6 +59,7 @@ RUN apt-get update && \
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+    age \
     python3 \
     python3-asn1crypto \
     python3-babel \
