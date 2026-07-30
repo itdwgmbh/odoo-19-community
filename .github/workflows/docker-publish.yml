@@ -121,6 +121,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write  # keyless cosign signing via the Actions OIDC identity
     needs:
       - build
     if: github.event_name != 'pull_request'
@@ -182,6 +183,16 @@ jobs:
       - name: Inspect image
         run: |
           docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v4.0.0
+
+      - name: Sign manifest list
+        run: |
+          digest=$(docker buildx imagetools inspect \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} \
+            --format '{{.Manifest.Digest}}')
+          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${digest}
 
   scan:
     runs-on: ubuntu-latest
