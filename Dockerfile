@@ -128,6 +128,7 @@ RUN useradd -r -u 999 -d /opt/odoo -s /usr/sbin/nologin odoo && \
 
 COPY --from=builder --chown=odoo:odoo /opt/pip-packages /opt/pip-packages
 COPY --from=builder --chown=odoo:odoo /opt/odoo/src /opt/odoo/src
+COPY --chown=odoo:odoo ./addons /opt/odoo-bundled-addons
 
 COPY --chmod=755 ./entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY --chmod=755 ./wait-for-psql.py /usr/local/bin/wait-for-psql.py

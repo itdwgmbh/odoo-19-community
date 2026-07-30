@@ -13,7 +13,7 @@ def get_env_or_file(var_name, default=""):
         try:
             with open(file_path) as f:
                 return f.read().rstrip("\n\r")
-        except IOError as e:
+        except OSError as e:
             print(f"Error: Cannot read secret file '{file_path}': {e}", file=sys.stderr)
             sys.exit(1)
     return os.environ.get(var_name, default)
@@ -37,6 +37,9 @@ OPTIONS = [
         "/opt/odoo/src/addons,/mnt/extra-addons,/opt/odoo-customer-addons",
     ),
     ("data_dir", "ODOO_DATA_DIR", "/var/lib/odoo"),
+    ("server_wide_modules", "ODOO_SERVER_WIDE_MODULES", "base,web,itdw_db_backup_age"),
+    # age public keys (comma/whitespace separated) for encrypted backups
+    ("age_recipients", "ODOO_AGE_RECIPIENTS", ""),
     # Server
     ("proxy_mode", "ODOO_PROXY_MODE", "True"),
     ("workers", "ODOO_WORKERS", "4"),
