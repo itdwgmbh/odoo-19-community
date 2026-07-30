@@ -25,6 +25,10 @@ on:
       - '.github/workflows/docker-publish.yml'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -118,6 +122,8 @@ jobs:
 
   merge:
     runs-on: ubuntu-latest
+    outputs:
+      digest: ${{ steps.digest.outputs.digest }}
     permissions:
       contents: read
       packages: write
@@ -187,12 +193,16 @@ jobs:
       - name: Install cosign
         uses: sigstore/cosign-installer@v4.0.0
 
-      - name: Sign manifest list
+      - name: Resolve manifest digest
+        id: digest
         run: |
           digest=$(docker buildx imagetools inspect \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} \
             --format '{{.Manifest.Digest}}')
-          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${digest}
+          echo "digest=${digest}" >> $GITHUB_OUTPUT
+
+      - name: Sign manifest list
+        run: cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.digest.outputs.digest }}
 
   scan:
     runs-on: ubuntu-latest
@@ -213,7 +223,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.merge.outputs.digest }}
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
