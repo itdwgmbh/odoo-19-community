@@ -73,8 +73,21 @@ All Odoo configuration is generated at container startup from environment variab
 
 | Variable | Default | Description |
 |---|---|---|
-| `ODOO_ADDONS_PATH` | `/opt/odoo/src/addons,/mnt/extra-addons,/opt/odoo-customer-addons` | Comma-separated addon paths |
+| `ODOO_ADDONS_PATH` | `/opt/odoo/src/addons,/opt/odoo-bundled-addons,/mnt/extra-addons,/opt/odoo-customer-addons` | Comma-separated addon paths |
 | `ODOO_DATA_DIR` | `/var/lib/odoo` | Odoo data directory |
+| `ODOO_SERVER_WIDE_MODULES` | `base,web,itdw_db_backup_age` | Modules loaded server-wide |
+| `ODOO_AGE_RECIPIENTS` | (empty) | age public keys for encrypted backups (see `addons/itdw_db_backup_age`) |
+
+## Bundled addons
+
+IT-DW addons shipped in the image under `/opt/odoo-bundled-addons` (see each
+addon's README in `addons/`):
+
+| Addon | Purpose |
+|---|---|
+| `itdw_db_backup_age` | age-encrypted database manager backups (server-wide, config-driven) |
+| `ms_graph_base` | Shared OAuth2 client + request layer for Microsoft Graph |
+| `mail_outbound_msgraph` | Outbound mail via Graph sendMail instead of SMTP |
 
 ## Docker Secrets
 
