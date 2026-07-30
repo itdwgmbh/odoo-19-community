@@ -33,7 +33,7 @@ class DatabaseAge(Database):
             odoo.service.db.check_super(master_pwd)
             if name not in http.db_list():
                 raise Exception(f"Database {name!r} is not known")
-            ts = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S")
+            ts = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d_%H-%M-%S")
             filename = f"{name}_{ts}.{backup_format}.age"
             headers = [
                 ("Content-Type", "application/octet-stream; charset=binary"),
@@ -55,8 +55,13 @@ class DatabaseAge(Database):
                 finally:
                     proc.stdout.close()
                     dump_stream.close()
-                    if proc.wait() != 0:
-                        _logger.error("age exited with code %s", proc.returncode)
+                    rc = proc.wait()
+                # Raising aborts the chunked response mid-stream, so the
+                # client's download fails loudly instead of storing a
+                # truncated file.
+                if rc != 0:
+                    _logger.error("age exited with code %s", rc)
+                    raise RuntimeError(f"age exited with code {rc}")
 
             return Response(generate(), headers=headers, direct_passthrough=True)
         except Exception as e:
