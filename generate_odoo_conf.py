@@ -34,7 +34,7 @@ OPTIONS = [
     (
         "addons_path",
         "ODOO_ADDONS_PATH",
-        "/opt/odoo/src/addons,/mnt/extra-addons,/opt/odoo-customer-addons",
+        "/opt/odoo/src/addons,/opt/odoo-bundled-addons,/mnt/extra-addons,/opt/odoo-customer-addons",
     ),
     ("data_dir", "ODOO_DATA_DIR", "/var/lib/odoo"),
     ("server_wide_modules", "ODOO_SERVER_WIDE_MODULES", "base,web,itdw_db_backup_age"),
@@ -92,7 +92,7 @@ def generate_config(output_path="/etc/odoo/odoo.conf"):
         with open(output_path, "w") as f:
             config.write(f)
         print(f"Successfully generated {output_path}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 — entrypoint boundary: report and exit nonzero
         print(f"Error generating config file: {e}", file=sys.stderr)
         sys.exit(1)
 
