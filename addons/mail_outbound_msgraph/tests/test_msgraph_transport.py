@@ -27,9 +27,7 @@ def _build_message(html=None, text=None, attachments=()):
         msg.set_content(text)
     for name, content, ctype in attachments:
         maintype, _, subtype = ctype.partition("/")
-        msg.add_attachment(
-            content, maintype=maintype, subtype=subtype, filename=name
-        )
+        msg.add_attachment(content, maintype=maintype, subtype=subtype, filename=name)
     return msg
 
 
@@ -78,9 +76,9 @@ class TestMsGraphTransport(TransactionCase):
         )
 
     def test_payload_keeps_only_x_headers(self):
-        headers = self.server._msgraph_build_payload(_build_message())[
-            "message"
-        ]["internetMessageHeaders"]
+        headers = self.server._msgraph_build_payload(_build_message())["message"][
+            "internetMessageHeaders"
+        ]
         names = [h["name"] for h in headers]
         self.assertIn("X-Odoo-Objects", names)
         self.assertNotIn("Received", names)
@@ -95,9 +93,7 @@ class TestMsGraphTransport(TransactionCase):
         self.assertEqual(att[0]["name"], "invoice.pdf")
         self.assertEqual(att[0]["contentType"], "application/pdf")
         self.assertEqual(att[0]["@odata.type"], "#microsoft.graph.fileAttachment")
-        self.assertEqual(
-            base64.b64decode(att[0]["contentBytes"]), b"%PDF-1.4 fake"
-        )
+        self.assertEqual(base64.b64decode(att[0]["contentBytes"]), b"%PDF-1.4 fake")
 
     # ------------------------------------------------------------------
     # Routing
@@ -113,7 +109,11 @@ class TestMsGraphTransport(TransactionCase):
         # fixed __mro__[1] index breaks whenever another module (e.g.
         # microsoft_outlook) inherits ir.mail_server.
         mro = type(self.env["ir.mail_server"]).__mro__
-        own = next(i for i, c in enumerate(mro) if c.__module__.startswith("odoo.addons.mail_outbound_msgraph"))
+        own = next(
+            i
+            for i, c in enumerate(mro)
+            if c.__module__.startswith("odoo.addons.mail_outbound_msgraph")
+        )
         smtp_impl = next(c for c in mro[own + 1 :] if "send_email" in c.__dict__)
         with patch.object(
             smtp_impl,
@@ -140,9 +140,7 @@ class TestMsGraphTransport(TransactionCase):
 
     def test_msgraph_fallback_sender_on_resource_not_found(self):
         msg = _build_message()
-        responses = iter(
-            [(False, "ResourceNotFound: mailbox missing"), (True, {})]
-        )
+        responses = iter([(False, "ResourceNotFound: mailbox missing"), (True, {})])
         with patch.object(
             type(self.env["ms.graph.service"]),
             "_graph_request",
@@ -173,10 +171,12 @@ class TestMsGraphTransport(TransactionCase):
 
     def test_msgraph_propagates_non_sender_errors(self):
         msg = _build_message()
-        with patch.object(
-            type(self.env["ms.graph.service"]),
-            "_graph_request",
-            return_value=(False, "TooManyRequests: throttled"),
-        ), self.assertRaises(MailDeliveryException):
+        with (
+            patch.object(
+                type(self.env["ms.graph.service"]),
+                "_graph_request",
+                return_value=(False, "TooManyRequests: throttled"),
+            ),
+            self.assertRaises(MailDeliveryException),
+        ):
             self.server.send_email(msg)
-
