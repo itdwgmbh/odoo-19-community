@@ -108,8 +108,15 @@ class TestMsGraphTransport(TransactionCase):
             {"name": "SMTP", "delivery_method": "smtp", "smtp_host": "mail"}
         )
         msg = _build_message()
+        # Patch the send_email implementation the msgraph override delegates
+        # to: the first class after our own in the MRO that defines it. A
+        # fixed __mro__[1] index breaks whenever another module (e.g.
+        # microsoft_outlook) inherits ir.mail_server.
+        mro = type(self.env["ir.mail_server"]).__mro__
+        own = next(i for i, c in enumerate(mro) if c.__module__.startswith("odoo.addons.mail_outbound_msgraph"))
+        smtp_impl = next(c for c in mro[own + 1 :] if "send_email" in c.__dict__)
         with patch.object(
-            type(self.env["ir.mail_server"]).__mro__[1],
+            smtp_impl,
             "send_email",
             return_value="<smtp@example.com>",
         ) as super_send:
