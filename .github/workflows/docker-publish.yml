@@ -79,6 +79,8 @@ jobs:
         uses: docker/metadata-action@v6.2.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          labels: |
+            org.opencontainers.image.description=Odoo 19 Community Edition
 
       - name: Build and push by digest
         id: build
