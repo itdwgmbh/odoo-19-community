@@ -127,6 +127,25 @@ The image fetches the latest Odoo 19 nightly source during build.
 - `19.0.YYYYMMDD` — pinned to a specific Odoo nightly version
 - `sha-<commit>` — pinned to a specific git commit
 
+## Supply chain
+
+Every published image includes:
+
+- **SBOM** — SPDX attestation from BuildKit (Syft), attached to the image
+- **Provenance** — SLSA provenance (`mode=max`) for the GitHub Actions build
+- **Cosign** — keyless signature via the workflow OIDC identity (Sigstore)
+- **Trivy** — post-push scan (`CRITICAL`/`HIGH`, fixed only); SARIF to the repo Security tab
+
+```bash
+cosign verify \
+  --certificate-identity-regexp 'https://github.com/itdwgmbh/odoo-19-community/.github/workflows/docker-publish.yml@.*' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  ghcr.io/itdwgmbh/odoo-19-community@sha256:<digest>
+
+docker buildx imagetools inspect ghcr.io/itdwgmbh/odoo-19-community:latest \
+  --format '{{ json (index .SBOM "linux/amd64").SPDX }}'
+```
+
 ## License
 
 This project is licensed under the MIT License. Odoo Community Edition is licensed under LGPL-3.0.
