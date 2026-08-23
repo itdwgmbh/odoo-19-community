@@ -75,6 +75,14 @@ unit, unit price, tax rate and subtotal. Nothing is recomputed — quantity time
 unit price need not equal the subtotal, because a line may carry a discount or
 rounding it does not spell out.
 
+The **Unit** column spells out the UN/ECE Rec 20 code an e-invoice carries
+(`H87` reads as *piece*, `HUR` as *hour*). The raw code stays on the line as
+**Unit Code**, hidden by default. A code outside the commercial subset, and the
+free text OCR returns, are shown unchanged rather than guessed at. Note that the
+code is whatever the sender wrote: a document stating `H87` for work billed by
+the hour is wrong at source, and this addon reports it faithfully rather than
+correcting it.
+
 The **Lines** tab totals the subtotals and says so when they do not add up to
 the untaxed amount. A document-level discount or charge makes them differ
 legitimately, which is why it is a note and not an error.

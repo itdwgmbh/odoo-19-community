@@ -120,7 +120,8 @@
                                     <field name="product_code" optional="show"/>
                                     <field name="name"/>
                                     <field name="quantity"/>
-                                    <field name="uom" optional="show"/>
+                                    <field name="uom_label" optional="show"/>
+                                    <field name="uom" optional="hide"/>
                                     <field name="price_unit"/>
                                     <field name="tax_rate" optional="show"/>
                                     <field name="amount" sum="Lines Total"/>

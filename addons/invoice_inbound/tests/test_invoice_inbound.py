@@ -396,3 +396,39 @@ class TestInvoiceInbound(TransactionCase):
     def test_lines_stay_out_of_the_extraction_payload(self):
         invoice = self._create(self.einvoice_pdf)
         self.assertNotIn("lines", invoice.extraction_payload)
+
+    # ------------------------------------------------------------------
+    # Unit of measure
+    # ------------------------------------------------------------------
+
+    def test_the_unece_code_is_stored_and_spelled_out(self):
+        line = self._create(self.einvoice_pdf).line_ids[0]
+        self.assertEqual(line.uom, "H87")
+        self.assertEqual(line.uom_label, "piece")
+
+    def test_an_hour_code_reads_as_an_hour(self):
+        line = self._create(self.einvoice_pdf).line_ids[0]
+        line.uom = "HUR"
+        self.assertEqual(line.uom_label, "hour")
+
+    def test_a_lowercase_code_still_resolves(self):
+        line = self._create(self.einvoice_pdf).line_ids[0]
+        line.uom = "hur"
+        self.assertEqual(line.uom_label, "hour")
+
+    def test_an_unlisted_code_is_shown_unchanged(self):
+        line = self._create(self.einvoice_pdf).line_ids[0]
+        line.uom = "ZZZ"
+        self.assertEqual(line.uom_label, "ZZZ")
+
+    def test_free_text_from_ocr_is_shown_unchanged(self):
+        self._patch_analyze((True, DI_ANALYZE_RESULT))
+        invoice = self._create(self.scan_pdf)
+        invoice._extract()
+        self.assertEqual(invoice.line_ids[0].uom, "hours")
+        self.assertEqual(invoice.line_ids[0].uom_label, "hours")
+
+    def test_a_line_without_a_unit_has_no_label(self):
+        line = self._create(self.einvoice_pdf).line_ids[0]
+        line.uom = False
+        self.assertFalse(line.uom_label)
