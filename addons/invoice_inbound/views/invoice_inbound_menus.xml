@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <menuitem id="menu_invoice_inbound_root" name="Invoice Inbox"
+              web_icon="invoice_inbound,static/description/icon.png"
+              sequence="60"
+              groups="invoice_inbound.group_invoice_inbound_user"/>
+
+    <menuitem id="menu_invoice_inbound_invoices" name="Invoices"
+              parent="menu_invoice_inbound_root"
+              action="invoice_inbound_action"
+              sequence="10"/>
+
+    <menuitem id="menu_invoice_inbound_configuration" name="Configuration"
+              parent="menu_invoice_inbound_root"
+              sequence="90"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_invoice_inbound_settings" name="Settings"
+              parent="menu_invoice_inbound_configuration"
+              action="invoice_inbound_config_settings_action"
+              sequence="10"/>
+</odoo>

@@ -1,0 +1,107 @@
+// IT-DW apps sidebar styling.
+// Brand tokens come from itdw_colors.scss; we just consume the cascade here.
+
+$itdw-appsbar-width:         180px;
+$itdw-appsbar-bg:            #222222;   // CI gray-900
+$itdw-appsbar-text:          #dee2e6;
+$itdw-appsbar-hover-bg:      rgba(255, 255, 255, 0.06);
+$itdw-appsbar-active-bg:     rgba(255, 255, 255, 0.10);
+$itdw-appsbar-active-accent: #D6373C;   // IT-DW red, lifted for the dark bar
+$itdw-appsbar-accent-width:  3px;
+
+.itdw_appsbar {
+    width: $itdw-appsbar-width;
+    background-color: $itdw-appsbar-bg;
+    overflow-y: auto;
+    scrollbar-width: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    &::-webkit-scrollbar { display: none; }
+}
+
+.itdw_appsbar_menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.itdw_appsbar_item {
+    margin: 0;
+}
+
+.itdw_appsbar_link {
+    // The accent bar lives inside this padding-left, so the icon doesn't
+    // shift horizontally when the active state appears.
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem 0.5rem calc(0.75rem + #{$itdw-appsbar-accent-width});
+    border-left: $itdw-appsbar-accent-width solid transparent;
+    color: $itdw-appsbar-text;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease;
+
+    &:hover,
+    &:focus {
+        background-color: $itdw-appsbar-hover-bg;
+        color: $itdw-appsbar-text;
+        text-decoration: none;
+    }
+}
+
+.itdw_appsbar_item_active > .itdw_appsbar_link {
+    // Subtle background tint + a red accent on the left edge. Avoids
+    // painting the row in IT-DW red, which would hide app icons that
+    // happen to be red themselves.
+    background-color: $itdw-appsbar-active-bg;
+    border-left-color: $itdw-appsbar-active-accent;
+    color: #ffffff;
+    font-weight: 600;
+
+    &:hover,
+    &:focus {
+        background-color: $itdw-appsbar-active-bg;
+    }
+}
+
+.itdw_appsbar_icon {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+}
+
+.itdw_appsbar_name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.itdw_appsbar_logo {
+    padding: 0.75rem;
+    text-align: center;
+    img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+    }
+}
+
+// Hide the appsbar in surfaces where Odoo expects the navbar gone:
+// website-builder full-screen mode, the home menu landing, and any
+// `.o_fullscreen` modal.
+.editor_has_snippets_hide_backend_navbar,
+.o_home_menu_background,
+.o_fullscreen {
+    .itdw_appsbar { display: none; }
+}
+
+@include media-breakpoint-down(md) {
+    .itdw_appsbar { display: none; }
+}

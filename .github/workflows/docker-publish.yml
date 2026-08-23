@@ -1,0 +1,238 @@
+name: Docker Build and Publish
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'  # Every Monday at 2:00 UTC
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'Dockerfile'
+      - 'addons/**'
+      - 'entrypoint.sh'
+      - 'generate_odoo_conf.py'
+      - 'requirements.txt'
+      - 'wait-for-psql.py'
+      - '.github/workflows/docker-publish.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'Dockerfile'
+      - 'addons/**'
+      - 'entrypoint.sh'
+      - 'generate_odoo_conf.py'
+      - 'requirements.txt'
+      - 'wait-for-psql.py'
+      - '.github/workflows/docker-publish.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - name: Prepare
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+
+      - name: Fetch Odoo version from nightly
+        id: odoo
+        run: |
+          ODOO_VERSION=$(curl -sfL https://nightly.odoo.com/19.0/nightly/deb/odoo_19.0.latest_amd64.changes | grep -E '^Version:' | awk '{print $2}')
+          echo "ODOO_VERSION=${ODOO_VERSION}" >> $GITHUB_OUTPUT
+          echo "Odoo version: ${ODOO_VERSION}"
+
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4.2.0
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v4.6.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6.2.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          labels: |
+            org.opencontainers.image.description=Odoo 19 Community Edition
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v7.3.0
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp || github.event.repository.updated_at }}
+            ODOO_VERSION=${{ steps.odoo.outputs.ODOO_VERSION }}
+          sbom: true
+          provenance: mode=max
+          cache-from: type=registry,ref=ghcr.io/${{ env.IMAGE_NAME }}:buildcache-${{ env.PLATFORM_PAIR }}
+          cache-to: ${{ github.ref == 'refs/heads/main' && format('type=registry,ref=ghcr.io/{0}:buildcache-{1},mode=max', env.IMAGE_NAME, env.PLATFORM_PAIR) || '' }}
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=${{ github.event_name != 'pull_request' }},oci-mediatypes=true
+
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Save Odoo version
+        run: echo "${{ steps.odoo.outputs.ODOO_VERSION }}" > ${{ runner.temp }}/odoo-version.txt
+
+      - name: Upload Odoo version
+        uses: actions/upload-artifact@v7
+        with:
+          name: odoo-version-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/odoo-version.txt
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    runs-on: ubuntu-latest
+    outputs:
+      digest: ${{ steps.digest.outputs.digest }}
+    permissions:
+      contents: read
+      packages: write
+      id-token: write  # keyless cosign signing via the Actions OIDC identity
+    needs:
+      - build
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v8
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Download Odoo version
+        uses: actions/download-artifact@v8
+        with:
+          path: ${{ runner.temp }}/odoo-version
+          pattern: odoo-version-*
+          merge-multiple: true
+
+      - name: Read Odoo version
+        id: odoo
+        run: |
+          ODOO_VERSION=$(cat ${{ runner.temp }}/odoo-version/odoo-version.txt)
+          echo "ODOO_VERSION=${ODOO_VERSION}" >> $GITHUB_OUTPUT
+          echo "Odoo version: ${ODOO_VERSION}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4.2.0
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        uses: docker/login-action@v4.6.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6.2.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ steps.odoo.outputs.ODOO_VERSION }}
+            type=sha
+
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          ANNOTATIONS=()
+          while IFS= read -r annotation; do
+            ANNOTATIONS+=("--annotation" "$annotation")
+          done < <(jq -r '.labels | to_entries[] | "index:" + .key + "=" + .value' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            "${ANNOTATIONS[@]}" \
+            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
+
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v4.1.2
+
+      - name: Resolve manifest digest
+        id: digest
+        run: |
+          digest=$(docker buildx imagetools inspect \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} \
+            --format '{{.Manifest.Digest}}')
+          echo "digest=${digest}" >> $GITHUB_OUTPUT
+
+      - name: Sign manifest list
+        run: cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.digest.outputs.digest }}
+
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+    needs: [merge]
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Log into registry ${{ env.REGISTRY }}
+        uses: docker/login-action@v4.6.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.merge.outputs.digest }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4.37.7
+        with:
+          sarif_file: trivy-results.sarif

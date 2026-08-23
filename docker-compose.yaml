@@ -1,0 +1,40 @@
+# Minimal Odoo + PostgreSQL setup for local development
+
+services:
+  web:
+    build: .
+    # Or use pre-built image:
+    # image: ghcr.io/itdwgmbh/odoo-19-community:latest
+    depends_on:
+      - db
+    ports:
+      - "8069:8069"
+    environment:
+      - DB_HOST=db
+      - DB_USER=${DB_USER:-odoo}
+      - DB_PASSWORD=${DB_PASSWORD:-odoo}
+      - ODOO_MASTER_PASSWORD=${ODOO_MASTER_PASSWORD:-changeme}
+    volumes:
+      - odoo-data:/var/lib/odoo
+      - odoo-config:/etc/odoo
+    restart: unless-stopped
+
+  db:
+    image: postgres:17
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-odoo}
+      - POSTGRES_USER=${DB_USER:-odoo}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  odoo-data:
+  odoo-config:
+  postgres-data:

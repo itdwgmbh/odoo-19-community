@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!--
+        Replace Odoo's default `<Dropdown>` apps menu (a vertical list of
+        plain text items) with the IT-DW fullscreen tile grid. Mobile
+        (`env.isSmall`) keeps the standard sidebar drawer untouched —
+        the tile grid is desktop-only.
+    -->
+    <t t-name="itdw_branding.NavBar.AppsMenu"
+       t-inherit="web.NavBar.AppsMenu"
+       t-inherit-mode="extension">
+        <xpath expr="//Dropdown" position="replace">
+            <AppsMenu menuClass="this.itdwAppsmenuClass">
+                <button data-hotkey="h" title="Home Menu">
+                    <i class="oi oi-apps"/>
+                </button>
+                <t t-set-slot="content">
+                    <a t-foreach="this.appMenuService.getAppsMenuItems()"
+                       t-as="app"
+                       t-key="app.id"
+                       class="itdw_appsmenu_tile o-navigable"
+                       t-att-href="app.href"
+                       t-att-data-menu-xmlid="app.xmlid"
+                       t-att-data-menu-id="app.id"
+                       t-att-data-action-id="app.actionID"
+                       t-on-click.prevent="() => app.action()">
+                        <img class="itdw_appsmenu_icon"
+                             t-att-src="app.iconUrl"
+                             t-att-alt="app.name"/>
+                        <span class="itdw_appsmenu_name" t-out="app.name"/>
+                    </a>
+                </t>
+            </AppsMenu>
+        </xpath>
+    </t>
+
+</templates>

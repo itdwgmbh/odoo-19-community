@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!--
+            Apply IT-DW corporate identity (https://www.it-dw.com/ci) to Odoo's
+            standard notification layout. This affects every transactional email
+            that goes through mail_notification_layout — activity assignments,
+            chatter messages, password resets, and any mail.template that sets
+            email_layout_xmlid="mail.mail_notification_layout".
+
+            The CTA button color is driven by company.email_secondary_color,
+            seeded in itdw_branding_company.xml — the standard layout already
+            reads that field.
+        -->
+        <template id="itdw_branding_notification_layout" inherit_id="mail.mail_notification_layout">
+
+            <!-- Replace the "Powered by Odoo" footer line with the sending company -->
+            <xpath expr="//span[@id='mail_unfollow']/.." position="replace">
+                <div t-if="show_footer" style="color: #555555; font-size: 11px; margin-top: 4px;">
+                    Sent by <t t-out="company.name"/>
+                    <span t-if="show_unfollow" id="mail_unfollow">
+                        | <a href="/mail/unfollow" style="text-decoration: none; color: #555555;">Unfollow</a>
+                    </span>
+                </div>
+            </xpath>
+
+        </template>
+    </data>
+</odoo>

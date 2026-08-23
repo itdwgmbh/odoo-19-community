@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!--
+            Odoo's stock activity-assignment notification renders only
+            Document/Summary/Deadline. Append the activity's note (or the type's
+            default_note as fallback) so users see actionable guidance instead
+            of bare metadata.
+        -->
+        <template id="itdw_message_activity_assigned_with_note" inherit_id="mail.message_activity_assigned">
+            <xpath expr="//p" position="after">
+                <t t-set="itdw_activity_note" t-value="activity.note if activity.note and activity.note != '&lt;p&gt;&lt;br&gt;&lt;/p&gt;' else activity.activity_type_id.default_note"/>
+                <div t-if="itdw_activity_note" style="margin-top: 12px;">
+                    <t t-out="itdw_activity_note"/>
+                </div>
+            </xpath>
+        </template>
+    </data>
+</odoo>

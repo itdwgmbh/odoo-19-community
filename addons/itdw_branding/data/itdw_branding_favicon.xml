@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!--
+            Override Odoo's default favicon (the purple Odoo "O") with the IT-DW
+            mark from https://www.it-dw.com/logo/icon.svg.
+
+            x_icon is set by website / scoped-app templates; preserve that fallback
+            so PWA installs keep working, but swap the static default.
+        -->
+        <template id="itdw_branding_favicon" inherit_id="web.layout">
+            <xpath expr="//link[@rel='shortcut icon']" position="replace">
+                <t t-set="itdw_is_neutralized"
+                   t-value="request and request.env['ir.config_parameter'].sudo().get_param('database.is_neutralized')"/>
+                <t t-set="itdw_default_favicon"
+                   t-value="'/itdw_branding/static/src/img/favicon_neutralized.svg' if itdw_is_neutralized else '/itdw_branding/static/src/img/favicon.svg'"/>
+                <link type="image/svg+xml" rel="icon"
+                      t-att-href="x_icon or itdw_default_favicon"/>
+            </xpath>
+        </template>
+    </data>
+</odoo>

@@ -1,0 +1,39 @@
+# Environment files
+.env
+.env.local
+.env.production
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Odoo specific
+/var/lib/odoo/
+/mnt/extra-addons/
+/opt/odoo-customer-addons/
+*.log
+
+# Docker volumes (local testing)
+volumes/
+
+# Claude Code worktrees
+.claude/worktrees/
+
+# Backup files
+*.bak
+*.backup
+*.old

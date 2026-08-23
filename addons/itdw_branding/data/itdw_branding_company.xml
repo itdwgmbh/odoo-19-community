@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Seed the IT-DW logo on the main company on first install. noupdate="1"
+        so admins can replace it via Settings → Companies without later module
+        upgrades reverting their choice.
+    -->
+    <data noupdate="1">
+        <record id="base.main_company" model="res.company">
+            <field
+                name="logo"
+                type="base64"
+                file="itdw_branding/static/src/img/itdw_logo.png"
+            />
+        </record>
+    </data>
+
+    <!--
+        Align the company's email colors with the brand. In Odoo's notification
+        layout `email_secondary_color` is the CTA button background and
+        `email_primary_color` is its label color — the names do not follow the
+        CI's primary/secondary roles. Without this, Settings → General → Email
+        Templates shows Odoo's defaults (#FFFFFF / #875A7B) and the CTA button
+        in outgoing mails is purple.
+
+        We use <function> rather than <record id="base.main_company">
+        because the underlying ir_model_data row carries noupdate=true
+        (set by the `base` module), which makes downstream <record>
+        writes silently no-op on upgrade. <function> calls write() directly
+        and bypasses that gate. Runs on install AND every upgrade —
+        intentional; these values track the brand, not admin preference.
+    -->
+    <function model="res.company" name="write">
+        <value eval="[ref('base.main_company')]"/>
+        <value eval="{
+            'email_primary_color': '#FFFFFF',
+            'email_secondary_color': '#B92025',
+        }"/>
+    </function>
+</odoo>

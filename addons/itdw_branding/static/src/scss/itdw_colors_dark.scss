@@ -1,0 +1,38 @@
+// IT-DW corporate identity — dark mode
+//
+// Loads immediately BEFORE itdw_colors.scss in the `web.assets_web_dark`
+// bundle. Assignments here are unconditional; the light file's `!default`
+// clauses then leave them alone. Same non-reactivity caveat as the light
+// file: everything Odoo derives must be set before primary_variables.scss.
+//
+// CI defines no dark palette, so the light tokens are lifted just enough to
+// hold contrast against Odoo's dark canvas.
+
+$itdw-red-dark:  #D6373C;
+$itdw-gray-dark: #8A8C8E;
+$itdw-surface:   #2B2B2D;
+
+$o-community-color:         $itdw-red-dark;
+$o-enterprise-color:        $itdw-red-dark;
+$o-enterprise-action-color: $itdw-red-dark;
+
+$o-brand-odoo:      $itdw-surface;
+$o-brand-primary:   $itdw-red-dark;
+$o-brand-secondary: $itdw-gray-dark;
+
+$o-action: $itdw-red-dark;
+
+// Fills read the same on a dark canvas, so the status colors stay at their
+// CI values; only their text variants below need lifting.
+$o-success: #28a745;
+$o-info:    #17a2b8;
+$o-warning: #ffc107;
+$o-danger:  #FF5733;
+
+$o-theme-text-colors: (
+    "primary": #E8595E,
+    "success": #4CC66C,
+    "info":    #3FC9DD,
+    "warning": #FFCE3A,
+    "danger":  #FF7F5C,
+);

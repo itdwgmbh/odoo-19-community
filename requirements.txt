@@ -1,0 +1,4 @@
+geoip2
+html2text
+lxml_html_clean
+python-pptx

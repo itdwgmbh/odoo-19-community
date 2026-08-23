@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="itdw_branding.AppsBar">
+        <nav class="itdw_appsbar" role="navigation" aria-label="Apps">
+            <ul class="itdw_appsbar_menu">
+                <t t-foreach="apps" t-as="app" t-key="app.id">
+                    <li t-att-class="'itdw_appsbar_item' + (app.id === currentAppId ? ' itdw_appsbar_item_active' : '')">
+                        <a class="itdw_appsbar_link"
+                           t-att-href="app.href"
+                           t-att-data-menu-id="app.id"
+                           t-att-data-menu-xmlid="app.xmlid"
+                           t-att-data-action-id="app.actionID"
+                           t-on-click.prevent="() => app.action()"
+                           role="menuitem">
+                            <img class="itdw_appsbar_icon"
+                                 t-att-src="app.iconUrl"
+                                 t-att-alt="app.name"/>
+                            <span class="itdw_appsbar_name" t-out="app.name"/>
+                        </a>
+                    </li>
+                </t>
+            </ul>
+            <div class="itdw_appsbar_logo">
+                <img t-att-src="logoUrl" alt="IT-DW"/>
+            </div>
+        </nav>
+    </t>
+
+</templates>

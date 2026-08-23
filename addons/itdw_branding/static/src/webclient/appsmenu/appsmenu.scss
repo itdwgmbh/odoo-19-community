@@ -1,0 +1,109 @@
+// Fullscreen tile-grid styling for the IT-DW apps menu (replaces Odoo's
+// vertical dropdown list).
+//
+// The popover service positions the element just below the apps-menu
+// trigger button and gives it `position: fixed` with computed top/left.
+// We don't override `top` — that way the menu naturally drops below
+// the navbar regardless of any banners stacked above it (e.g. the
+// neutralize banner). We stretch `left/right/bottom` to fill the rest
+// of the viewport.
+
+$itdw-appsmenu-bg-center: #3D3D40;   // lifted charcoal at the viewport center
+$itdw-appsmenu-bg-edge:   #161618;   // near-black at the corners
+$itdw-appsmenu-text:      #f5f5f5;
+$itdw-appsmenu-tile-bg:   #ffffff;
+$itdw-appsmenu-tile-size: 72px;
+
+// The asset pipeline rewrites relative url() paths against the containing
+// file's directory, and it only recognises a root-relative path when the
+// literal starts with `/` — a path passed in through a SCSS variable or mixin
+// argument arrives quoted and gets prefixed, producing a broken URL that
+// invalidates the whole `background` shorthand. Keep these literal.
+.itdw_appsmenu.dropdown-menu {
+    right: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 3rem 2rem;
+    border: none;
+    border-radius: 0;
+    background:
+        url("/itdw_branding/static/src/img/itdw_logo_dark.svg")
+            no-repeat bottom 2rem right 2rem / 180px auto,
+        radial-gradient(circle at center,
+                        $itdw-appsmenu-bg-center 0%,
+                        $itdw-appsmenu-bg-edge 100%);
+
+    &.itdw_appsmenu_neutralized {
+        background:
+            url("/itdw_branding/static/src/img/itdw_logo_dark_neutralized.svg")
+                no-repeat bottom 2rem right 2rem / 180px auto,
+            radial-gradient(circle at center,
+                            $itdw-appsmenu-bg-center 0%,
+                            $itdw-appsmenu-bg-edge 100%);
+    }
+
+    color: $itdw-appsmenu-text;
+    overflow-y: auto;
+    user-select: none;
+
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 1.5rem 0.75rem;
+    justify-items: center;
+    align-content: center;
+
+    @include media-breakpoint-up(lg) {
+        padding-left: 12vw;
+        padding-right: 12vw;
+    }
+}
+
+.itdw_appsmenu_tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 110px;
+    padding: 0;
+    background: none !important;
+    color: $itdw-appsmenu-text;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 120ms ease;
+
+    &:hover,
+    &:focus {
+        color: #ffffff;
+        text-decoration: none;
+        transform: translateY(-2px);
+
+        .itdw_appsmenu_icon {
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2),
+                        0 8px 12px rgba(0, 0, 0, 0.25);
+        }
+    }
+}
+
+.itdw_appsmenu_icon {
+    width: $itdw-appsmenu-tile-size;
+    height: $itdw-appsmenu-tile-size;
+    padding: 9px;
+    border-radius: 12px;   // CI icon-well radius
+    background-color: $itdw-appsmenu-tile-bg;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15),
+                0 4px 8px rgba(0, 0, 0, 0.15);
+    object-fit: contain;
+    transition: box-shadow 120ms ease;
+}
+
+.itdw_appsmenu_name {
+    margin-top: 0.6rem;
+    font-size: 13px;
+    font-weight: 400;
+    text-align: center;
+    color: $itdw-appsmenu-text;
+}

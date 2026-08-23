@@ -1,0 +1,68 @@
+// IT-DW corporate identity — light mode
+// Tokens from https://www.it-dw.com/ci
+//
+// IMPORTANT: this file MUST load BEFORE web/static/src/scss/primary_variables.scss.
+// Odoo's primary_variables.scss uses `!default` and derives several variables
+// from each other (e.g. $o-brand-odoo: $o-community-color !default;). SCSS
+// variables are not reactive, so re-assigning a base after derivation does
+// nothing. By loading first, our values become the canonical ones and Odoo's
+// `!default` clauses preserve them.
+//
+// Every token here carries `!default` so itdw_colors_dark.scss — loaded before
+// this file in the dark bundle — can win without a second copy of the mapping.
+//
+// Bootstrap semantic mapping:
+//   brand-odoo → IT-DW Dark (navbar, institutional surfaces)
+//   primary    → IT-DW Red (headlines, icons, CTAs)
+//   secondary  → IT-DW Gray
+//   success / info / warning / danger → CI status colors
+
+// CI brand tokens
+$itdw-red:   #B92025;
+$itdw-gray:  #6C6E70;
+$itdw-dark:  #333333;  // CI text-primary, used as the institutional surface
+
+// CI status colors
+$itdw-success: #28a745;
+$itdw-info:    #17a2b8;
+$itdw-warning: #ffc107;
+$itdw-danger:  #FF5733;
+
+// Brand variables — set every variable Odoo derives from each other
+// explicitly, because `!default` only fires on the first assignment.
+//
+// $o-enterprise-color feeds the html_editor 'base-1' palette as `o-color-1`,
+// which is where the frontend (login, portal) gets its Bootstrap $primary
+// from — so it has to be the red, not the dark surface.
+$o-community-color:         $itdw-red !default;
+$o-enterprise-color:        $itdw-red !default;
+$o-enterprise-action-color: $itdw-red !default;
+
+$o-brand-odoo:      $itdw-dark !default;  // navbar background derives from this
+$o-brand-primary:   $itdw-red !default;   // primary buttons / CTAs derive from this
+$o-brand-secondary: $itdw-gray !default;
+
+$o-action: $itdw-red !default;
+
+// Semantic status colors — drive btn-success/btn-info/btn-warning/btn-danger,
+// alert-*, badge-*, and the Bootstrap theme-color map.
+$o-success: $itdw-success !default;
+$o-info:    $itdw-info !default;
+$o-warning: $itdw-warning !default;
+$o-danger:  $itdw-danger !default;
+
+// Text variants of the same roles, darkened to clear 4.5:1 on white.
+// The raw CI values above are tuned for fills, not for body copy.
+$o-theme-text-colors: (
+    "primary": $itdw-red,
+    "success": #1e7e34,
+    "info":    #117a8b,
+    "warning": #8a6800,
+    "danger":  #C43A16,
+) !default;
+
+// Typography — faces are declared in itdw_fonts.scss.
+// Overriding $o-system-fonts covers both the backend ($o-font-family-sans-serif)
+// and the frontend ($font-family-sans-serif), which derive from it downstream.
+$o-system-fonts: ("Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Ubuntu, "Noto Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji") !default;
+$o-headings-font-family: o-add-unicode-support-font(("Armata", $o-system-fonts)) !default;

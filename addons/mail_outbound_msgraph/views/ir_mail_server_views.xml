@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="ir_mail_server_form_inherit_msgraph" model="ir.ui.view">
+        <field name="name">ir.mail_server.form.msgraph</field>
+        <field name="model">ir.mail_server</field>
+        <field name="inherit_id" ref="base.ir_mail_server_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="delivery_method" widget="radio" options="{'horizontal': true}"/>
+                <field name="ms_graph_default_sender"
+                       invisible="delivery_method != 'msgraph'"
+                       required="delivery_method == 'msgraph'"
+                       placeholder="e.g. odoo@example.com"/>
+            </xpath>
+
+            <xpath expr="//field[@name='smtp_authentication']/../.." position="attributes">
+                <attribute name="invisible">delivery_method == 'msgraph'</attribute>
+            </xpath>
+
+            <xpath expr="//notebook" position="attributes">
+                <attribute name="invisible">smtp_authentication == 'cli' or delivery_method == 'msgraph'</attribute>
+            </xpath>
+
+            <xpath expr="//button[@name='test_smtp_connection']" position="attributes">
+                <attribute name="invisible">delivery_method == 'msgraph'</attribute>
+            </xpath>
+
+            <xpath expr="//button[@name='test_smtp_connection']" position="after">
+                <button string="Test Connection" type="object"
+                        name="test_msgraph_connection" class="btn-primary"
+                        invisible="delivery_method != 'msgraph'"/>
+            </xpath>
+
+            <xpath expr="//field[@name='smtp_host']" position="attributes">
+                <attribute name="required">smtp_authentication != 'cli' and delivery_method != 'msgraph'</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='smtp_port']" position="attributes">
+                <attribute name="required">smtp_authentication != 'cli' and delivery_method != 'msgraph'</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="ir_mail_server_list_inherit_msgraph" model="ir.ui.view">
+        <field name="name">ir.mail_server.list.msgraph</field>
+        <field name="model">ir.mail_server</field>
+        <field name="inherit_id" ref="base.ir_mail_server_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='smtp_host']" position="before">
+                <field name="delivery_method"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

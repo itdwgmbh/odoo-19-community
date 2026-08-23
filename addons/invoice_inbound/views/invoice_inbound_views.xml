@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="invoice_inbound_view_list" model="ir.ui.view">
+        <field name="name">invoice.inbound.list</field>
+        <field name="model">invoice.inbound</field>
+        <field name="arch" type="xml">
+            <list string="Inbound Invoices" sample="1"
+                  decoration-muted="state == 'rejected'"
+                  decoration-success="state == 'paid'">
+                <field name="currency_id" column_invisible="True"/>
+                <field name="name"/>
+                <field name="document_type" optional="hide"/>
+                <field name="partner_id" optional="show"/>
+                <field name="partner_name" optional="hide"/>
+                <field name="invoice_number" optional="show"/>
+                <field name="invoice_date" optional="show"/>
+                <field name="date_due" optional="show"
+                       decoration-danger="state != 'paid' and date_due &lt; context_today().strftime('%Y-%m-%d')"/>
+                <field name="amount_untaxed" optional="hide"/>
+                <field name="amount_total" optional="hide"/>
+                <field name="amount_total_signed" string="Total" sum="Total"
+                       decoration-danger="document_type == 'credit_note'"/>
+                <field name="extraction_state" optional="show"
+                       decoration-danger="extraction_state == 'failed'"
+                       decoration-muted="extraction_state == 'pending'"/>
+                <field name="extraction_method" optional="hide"/>
+                <field name="company_id" optional="hide" groups="base.group_multi_company"/>
+                <field name="activity_ids" widget="list_activity" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'incoming'"
+                       decoration-warning="state == 'validated'"
+                       decoration-success="state == 'paid'"
+                       decoration-danger="state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="invoice_inbound_view_form" model="ir.ui.view">
+        <field name="name">invoice.inbound.form</field>
+        <field name="model">invoice.inbound</field>
+        <field name="arch" type="xml">
+            <form string="Inbound Invoice">
+                <header>
+                    <button name="action_validate" string="Validate" type="object"
+                            class="btn-primary"
+                            invisible="state not in ('incoming', 'rejected')"
+                            groups="invoice_inbound.group_invoice_inbound_manager"/>
+                    <button name="action_mark_paid" string="Mark Paid" type="object"
+                            class="btn-primary"
+                            invisible="state != 'validated'"
+                            groups="invoice_inbound.group_invoice_inbound_manager"/>
+                    <button name="action_reject" string="Reject" type="object"
+                            invisible="state not in ('incoming', 'validated')"
+                            groups="invoice_inbound.group_invoice_inbound_manager"/>
+                    <button name="action_reset_to_incoming" string="Reset to Incoming"
+                            type="object" invisible="state == 'incoming'"
+                            groups="invoice_inbound.group_invoice_inbound_manager"/>
+                    <button name="action_extract" string="Extract Again" type="object"
+                            invisible="not file"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="incoming,validated,paid"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Rejected" bg_color="text-bg-danger"
+                            invisible="state != 'rejected'"/>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger"
+                            invisible="active or state == 'rejected'"/>
+                    <widget name="web_ribbon" title="Credit Note" bg_color="text-bg-warning"
+                            invisible="document_type != 'credit_note' or state == 'rejected' or not active"/>
+                    <field name="active" invisible="1"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. invoice-2026-04.pdf"/></h1>
+                    </div>
+                    <group>
+                        <group string="Vendor">
+                            <field name="partner_id"/>
+                            <field name="partner_name"/>
+                            <field name="partner_vat"/>
+                            <field name="iban"/>
+                        </group>
+                        <group string="Invoice">
+                            <field name="document_type" widget="radio"
+                                   options="{'horizontal': true}"/>
+                            <field name="invoice_number"/>
+                            <field name="invoice_date"/>
+                            <field name="date_due"/>
+                            <field name="purchase_order"/>
+                            <field name="payment_reference"/>
+                            <field name="payment_terms"/>
+                        </group>
+                        <group string="Amounts">
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                            <field name="amount_untaxed"/>
+                            <field name="amount_tax"/>
+                            <field name="amount_total"/>
+                            <field name="amount_total_signed"
+                                   invisible="document_type != 'credit_note'"/>
+                        </group>
+                        <group string="Filing">
+                            <field name="file_name" invisible="1"/>
+                            <field name="file" filename="file_name"/>
+                            <field name="user_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="source"/>
+                            <field name="email_from" invisible="source != 'email'"/>
+                            <field name="payment_date" invisible="state != 'paid'"/>
+                        </group>
+                    </group>
+                    <group string="Rejection" invisible="state != 'rejected'">
+                        <field name="rejection_reason" nolabel="1"
+                               placeholder="Why was this invoice rejected?"/>
+                    </group>
+                    <notebook>
+                        <page string="Lines" name="lines">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="product_code" optional="show"/>
+                                    <field name="name"/>
+                                    <field name="quantity"/>
+                                    <field name="uom" optional="show"/>
+                                    <field name="price_unit"/>
+                                    <field name="tax_rate" optional="show"/>
+                                    <field name="amount" sum="Lines Total"/>
+                                    <field name="confidence" widget="percentage"
+                                           optional="hide"/>
+                                </list>
+                            </field>
+                            <group class="oe_subtotal_footer oe_right">
+                                <field name="lines_amount"/>
+                                <field name="amount_untaxed" string="Untaxed Amount"
+                                       readonly="1"/>
+                            </group>
+                            <div class="text-warning"
+                                 invisible="not line_ids or lines_match">
+                                The lines do not add up to the untaxed amount. A
+                                document-level discount or charge explains that;
+                                otherwise check the extraction.
+                            </div>
+                            <field name="lines_match" invisible="1"/>
+                        </page>
+                        <page string="Extraction" name="extraction">
+                            <group>
+                                <group>
+                                    <field name="extraction_state"/>
+                                    <field name="extraction_method"/>
+                                    <field name="extraction_confidence" widget="percentage"
+                                           invisible="extraction_method != 'ocr'"/>
+                                </group>
+                                <group>
+                                    <field name="extraction_error"
+                                           invisible="extraction_state != 'failed'"/>
+                                    <field name="file_checksum" groups="base.group_no_one"/>
+                                </group>
+                            </group>
+                            <field name="extraction_payload" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="invoice_inbound_view_search" model="ir.ui.view">
+        <field name="name">invoice.inbound.search</field>
+        <field name="model">invoice.inbound</field>
+        <field name="arch" type="xml">
+            <search string="Inbound Invoices">
+                <field name="name" string="Document"
+                       filter_domain="['|', '|', ('name', 'ilike', self), ('invoice_number', 'ilike', self), ('partner_name', 'ilike', self)]"/>
+                <field name="partner_id"/>
+                <field name="invoice_number"/>
+                <filter name="filter_incoming" string="Incoming"
+                        domain="[('state', '=', 'incoming')]"/>
+                <filter name="filter_validated" string="Validated"
+                        domain="[('state', '=', 'validated')]"/>
+                <filter name="filter_rejected" string="Rejected"
+                        domain="[('state', '=', 'rejected')]"/>
+                <filter name="filter_paid" string="Paid"
+                        domain="[('state', '=', 'paid')]"/>
+                <separator/>
+                <filter name="filter_credit_notes" string="Credit Notes"
+                        domain="[('document_type', '=', 'credit_note')]"/>
+                <separator/>
+                <filter name="filter_unpaid_due" string="Overdue"
+                        domain="[('date_due', '&lt;', context_today().strftime('%Y-%m-%d')), ('state', '!=', 'paid')]"/>
+                <separator/>
+                <filter name="filter_extraction_failed" string="Extraction Failed"
+                        domain="[('extraction_state', '=', 'failed')]"/>
+                <filter name="filter_extraction_pending" string="Extraction Pending"
+                        domain="[('extraction_state', '=', 'pending')]"/>
+                <separator/>
+                <filter name="filter_my" string="My Invoices"
+                        domain="[('user_id', '=', uid)]"/>
+                <group name="group_filters">
+                    <filter name="group_state" string="Status" domain="[]"
+                            context="{'group_by': 'state'}"/>
+                    <filter name="group_partner" string="Vendor" domain="[]"
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_invoice_date" string="Invoice Date" domain="[]"
+                            context="{'group_by': 'invoice_date'}"/>
+                    <filter name="group_document_type" string="Document Type" domain="[]"
+                            context="{'group_by': 'document_type'}"/>
+                    <filter name="group_extraction_method" string="Extraction" domain="[]"
+                            context="{'group_by': 'extraction_method'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="invoice_inbound_action" model="ir.actions.act_window">
+        <field name="name">Inbound Invoices</field>
+        <field name="res_model">invoice.inbound</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="invoice_inbound_view_search"/>
+        <field name="context">{'search_default_filter_incoming': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Upload your first supplier invoice</p>
+            <p>
+                Attach a PDF or XML. ZUGFeRD, Factur-X and XRechnung documents are
+                read straight away; anything else is sent to Azure Document
+                Intelligence for OCR.
+            </p>
+        </field>
+    </record>
+
+    <record id="invoice_inbound_config_settings_action" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="context">{'module': 'invoice_inbound', 'bin_size': False}</field>
+    </record>
+</odoo>

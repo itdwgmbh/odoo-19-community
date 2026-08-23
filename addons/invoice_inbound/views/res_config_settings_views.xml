@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.invoice.inbound</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="90"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Invoice Inbox" string="Invoice Inbox"
+                     name="invoice_inbound"
+                     groups="invoice_inbound.group_invoice_inbound_manager">
+                    <block title="Field Extraction" name="invoice_inbound_extraction">
+                        <setting id="azure_di_setting" string="Azure Document Intelligence"
+                                 help="OCR for invoices that carry no e-invoice XML. Leave the endpoint empty to keep those invoices pending instead.">
+                            <div class="content-group">
+                                <div class="row mt8">
+                                    <label for="azure_di_endpoint" class="col-lg-4 o_light_label"/>
+                                    <field name="azure_di_endpoint"
+                                           placeholder="https://my-foundry.cognitiveservices.azure.com"/>
+                                </div>
+                                <div class="row">
+                                    <label for="azure_di_timeout" class="col-lg-4 o_light_label"/>
+                                    <field name="azure_di_timeout"/>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+                    <block title="Mailbox" name="invoice_inbound_mailbox">
+                        <setting id="invoice_mailbox_setting" string="Microsoft 365 Mailbox"
+                                 help="Unread mail with a PDF or XML attachment becomes an incoming invoice. Leave the mailbox empty to disable it.">
+                            <div class="content-group">
+                                <div class="row mt8">
+                                    <label for="invoice_inbound_mailbox" class="col-lg-4 o_light_label"/>
+                                    <field name="invoice_inbound_mailbox"
+                                           placeholder="rechnung@example.com"/>
+                                </div>
+                                <div class="row">
+                                    <label for="invoice_inbound_folder" class="col-lg-4 o_light_label"/>
+                                    <field name="invoice_inbound_folder" placeholder="inbox"/>
+                                </div>
+                                <div class="row">
+                                    <label for="invoice_inbound_processed_folder" class="col-lg-4 o_light_label"/>
+                                    <field name="invoice_inbound_processed_folder"
+                                           placeholder="archive"/>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>
