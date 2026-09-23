@@ -1,5 +1,6 @@
 import contextlib
 import logging
+import time
 
 import requests
 from odoo import models
@@ -8,6 +9,19 @@ _logger = logging.getLogger(__name__)
 
 GRAPH_BASE = "https://graph.microsoft.com/v1.0"
 GRAPH_SCOPE = "https://graph.microsoft.com/.default"
+
+# 429 and 503 mean Graph did not process the request, so even a POST such as
+# sendMail is safe to repeat. Retry-After is honoured up to _RETRY_MAX_DELAY.
+_RETRY_STATUSES = (429, 503)
+_RETRY_DELAYS = (1, 2)
+_RETRY_MAX_DELAY = 5
+
+
+def _retry_delay(resp, default):
+    try:
+        return min(float(resp.headers.get("Retry-After", default)), _RETRY_MAX_DELAY)
+    except (TypeError, ValueError):
+        return default
 
 
 class MsGraphService(models.AbstractModel):
@@ -25,6 +39,7 @@ class MsGraphService(models.AbstractModel):
         - When `raw=True`, returns (True, response_bytes) on success instead
           of decoding JSON — used by callers that need RFC822 / binary
           payloads (e.g. /messages/{id}/$value).
+        - 429 and 503 are retried up to len(_RETRY_DELAYS) times.
         - On HTTP error, returns (False, server's error.message when parseable,
           else the raw exception string).
         """
@@ -35,9 +50,24 @@ class MsGraphService(models.AbstractModel):
         url = path if path.startswith("http") else f"{GRAPH_BASE}{path}"
         headers["Content-Type"] = "application/json"
         try:
-            resp = requests.request(
-                method, url, headers=headers, json=json_data, timeout=30
-            )
+            for default_delay in (*_RETRY_DELAYS, None):
+                resp = requests.request(
+                    method, url, headers=headers, json=json_data, timeout=30
+                )
+                if resp.status_code not in _RETRY_STATUSES or default_delay is None:
+                    break
+                delay = _retry_delay(resp, default_delay)
+                _logger.info(
+                    "ms_graph_request_retry",
+                    extra={
+                        "event": "ms_graph_request_retry",
+                        "method": method,
+                        "path": path,
+                        "status": resp.status_code,
+                        "delay": delay,
+                    },
+                )
+                time.sleep(delay)
             resp.raise_for_status()
             if resp.status_code == 204 or not resp.content:
                 return True, (b"" if raw else {})

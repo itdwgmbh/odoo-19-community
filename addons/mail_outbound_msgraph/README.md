@@ -55,9 +55,12 @@ Apply via the Exchange Online PowerShell module.
   (`ResourceNotFound`, `MailboxNotEnabled`, …), the send is retried once
   with `ms_graph_default_sender`. A `ms_graph_send_fallback_sender` event is
   logged each time this triggers.
-- **Other errors** (auth, throttling, payload validation) raise
-  `MailDeliveryException`, which `mail.mail` records as `exception` for the
-  scheduled retry cron to pick up — same behaviour as the SMTP transport.
+- **Transient errors**: HTTP 429 and 503 are retried inside the send by
+  `ms_graph_base` (see its README).
+- **Other errors** raise `MailDeliveryException`. `mail.mail` marks the mail
+  `exception` and the notification shows under *Sending Failures*; the mail
+  queue cron only sends `outgoing` mails, so a failed mail is resent from that
+  dialog. Same behaviour as the SMTP transport.
 - **Sent Items**: `saveToSentItems: true` — mails appear in the sender
   mailbox's Outlook Sent Items unless mailbox policy overrides it.
 - **Message-Id**: reused from the incoming MIME message so threading in

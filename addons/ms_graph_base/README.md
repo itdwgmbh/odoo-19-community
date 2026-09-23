@@ -163,8 +163,10 @@ share one cache entry.
   and scope, so several resources and a changed identity never share an entry.
   A token is reused until 120 s before it expires. One acquisition runs at a
   time per worker, so a burst of requests makes one token call.
-- **Retries**: none. A throttled or transient failure surfaces to the caller,
-  whose cron decides when to try again.
+- **Retries**: `_graph_request` retries HTTP 429 and 503 twice, waiting
+  `Retry-After` (capped at 5 s) or 1 s, then 2 s. Graph has not processed a
+  request answered with either status, so POSTs are retried too. Other errors
+  and a third 429/503 surface to the caller.
 - **Azure Arc** managed identity is not supported; its challenge-response flow
   needs a key file the Odoo user cannot read.
 
@@ -174,6 +176,7 @@ share one cache entry.
 | --- | --- |
 | `ms_entra_token_acquired` | token issued; carries mode, tenant, client id, scope, lifetime |
 | `ms_entra_token_failed` | acquisition failed; carries the same fields plus the error |
+| `ms_graph_request_retry` | a 429/503 response is retried; carries status and delay |
 | `ms_graph_request_failed` | a Graph request returned an error |
 
 Secrets, certificates and tokens are never logged.

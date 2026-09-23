@@ -24,10 +24,11 @@ GRAPH_SCOPE = "https://graph.microsoft.com/.default"
 class _Response:
     """Minimal stand-in for requests.Response."""
 
-    def __init__(self, body, status=200):
+    def __init__(self, body, status=200, headers=None):
         self.status_code = status
         self._body = body
         self.content = json.dumps(body).encode()
+        self.headers = headers or {}
 
     def json(self):
         return self._body
@@ -647,3 +648,52 @@ class TestMsGraphServiceAuth(TransactionCase):
         ok, error = self.service._graph_request("GET", "/me")
         self.assertFalse(ok)
         self.assertIn("not configured", error)
+
+    def _graph_with(self, responses):
+        config = self.env["ir.config_parameter"].sudo()
+        config.set_param("ms_graph.tenant_id", TENANT)
+        config.set_param("ms_graph.client_id", CLIENT)
+        config.set_param("ms_graph.client_secret", "s3cr3t")
+        with (
+            patch.object(
+                ms_entra_auth.requests, "post", return_value=_Response(_token_body())
+            ),
+            patch.object(
+                ms_graph_service.requests, "request", side_effect=responses
+            ) as request,
+            patch.object(ms_graph_service.time, "sleep") as sleep,
+        ):
+            result = self.service._graph_request("POST", "/users/a@b.c/sendMail")
+        return result, request, sleep
+
+    def test_graph_request_retries_503(self):
+        (ok, body), request, sleep = self._graph_with(
+            [_Response({}, status=503), _Response({}, status=202)]
+        )
+        self.assertTrue(ok, body)
+        self.assertEqual(request.call_count, 2)
+        sleep.assert_called_once_with(1)
+
+    def test_graph_request_caps_retry_after(self):
+        (ok, _body), _request, sleep = self._graph_with(
+            [_Response({}, status=429, headers={"Retry-After": "30"}), _Response({})]
+        )
+        self.assertTrue(ok)
+        sleep.assert_called_once_with(5)
+
+    def test_graph_request_gives_up_after_retries(self):
+        (ok, error), request, sleep = self._graph_with(
+            [_Response({}, status=503)] * 3
+        )
+        self.assertFalse(ok)
+        self.assertIn("503", error)
+        self.assertEqual(request.call_count, 3)
+        self.assertEqual(sleep.call_count, 2)
+
+    def test_graph_request_does_not_retry_other_errors(self):
+        (ok, _error), request, sleep = self._graph_with(
+            [_Response({}, status=504), _Response({})]
+        )
+        self.assertFalse(ok)
+        request.assert_called_once()
+        sleep.assert_not_called()
