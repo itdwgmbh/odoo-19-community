@@ -48,7 +48,7 @@ OPTIONS = [
     ("max_cron_threads", "ODOO_MAX_CRON_THREADS", "2"),
     ("list_db", "ODOO_LIST_DB", "True"),
     ("unaccent", "ODOO_UNACCENT", "True"),
-    ("without_demo", "ODOO_WITHOUT_DEMO", "all"),
+    ("without_demo", "ODOO_WITHOUT_DEMO", "True"),
     # Network
     ("http_interface", "ODOO_HTTP_INTERFACE", "::"),  # :: = dualstack (IPv4+IPv6)
     ("http_enable", "ODOO_HTTP_ENABLE", "True"),
@@ -65,7 +65,7 @@ OPTIONS = [
     # Logging
     ("log_handler", "ODOO_LOG_HANDLER", "['werkzeug:CRITICAL','odoo:WARNING']"),
     ("log_level", "ODOO_LOG_LEVEL", "info"),
-    ("log_db", "ODOO_LOG_DB", "False"),
+    ("log_db", "ODOO_LOG_DB", ""),
     ("log_db_level", "ODOO_LOG_DB_LEVEL", "warning"),
 ]
 

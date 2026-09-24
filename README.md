@@ -47,7 +47,7 @@ All Odoo configuration is generated at container startup from environment variab
 | `ODOO_HTTP_PORT` | `8069` | HTTP port |
 | `ODOO_HTTP_ENABLE` | `True` | Serve HTTP and longpolling |
 | `ODOO_GEVENT_PORT` | `8072` | Longpolling/WebSocket port |
-| `ODOO_WITHOUT_DEMO` | `all` | Disable demo data |
+| `ODOO_WITHOUT_DEMO` | `True` | Disable demo data |
 | `ODOO_LIST_DB` | `True` | Show database selector |
 | `ODOO_UNACCENT` | `True` | Enable unaccent for search |
 
@@ -68,7 +68,7 @@ All Odoo configuration is generated at container startup from environment variab
 |---|---|---|
 | `ODOO_LOG_LEVEL` | `info` | Log level |
 | `ODOO_LOG_HANDLER` | `['werkzeug:CRITICAL','odoo:WARNING']` | Log handler configuration |
-| `ODOO_LOG_DB` | `False` | Log to database |
+| `ODOO_LOG_DB` | (empty) | Database name to write logs to |
 
 ### Paths
 
