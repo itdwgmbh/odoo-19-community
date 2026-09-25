@@ -2,21 +2,18 @@
 
 Adds a `delivery_method` selection to `ir.mail_server`. When set to
 `Microsoft Graph`, `send_email()` POSTs to `/users/{upn}/sendMail` via the
-shared `ms_graph_base` client instead of opening an SMTP session.
-
-SMTP-method servers (e.g. MailDev in dev) are unaffected — the override is
-gated entirely on `delivery_method`.
+shared `ms_graph_base` client instead of opening an SMTP session. SMTP-method
+servers are unaffected.
 
 ## Configuration
 
-1. Install `ms_graph_base` and configure the Entra credential — client secret,
-   certificate, managed identity or workload identity (see that addon's
+1. Install `ms_graph_base` and configure the Entra credential (see that addon's
    README).
 2. On the production `ir.mail_server` record:
    - Set **Delivery Method** to *Microsoft Graph*.
-   - Set **MS Graph Default Sender** to a real tenant mailbox UPN (e.g.
-     `odoo@example.com`). This is the From used when a message's From header
-     doesn't resolve to a tenant mailbox (cron mails, `noreply@`, etc.).
+   - Set **MS Graph Default Sender** to a real tenant mailbox UPN. This is the
+     From used when a message's From header doesn't resolve to a tenant mailbox
+     (cron mails, `noreply@`, etc.).
 
 The dev/staging restore script (`odoo_restore/fixups.py`) keeps mail on
 SMTP/MailDev — production cutover is a one-time UI edit and isn't part of
@@ -26,18 +23,16 @@ restores.
 
 The app registration needs **Mail.Send** application permission with admin
 consent. Without a scope restriction the app can send as any mailbox in the
-tenant — restrict it:
+tenant — restrict it with Exchange Online PowerShell:
 
 ```powershell
-# Create a mail-enabled security group containing every mailbox Odoo is
-# allowed to send from (initially: just the shared odoo@ mailbox).
+# Mail-enabled security group containing every mailbox Odoo may send from.
 New-DistributionGroup -Name "odoo-mail-senders" -Type "Security" `
     -PrimarySmtpAddress "odoo-mail-senders@example.com"
 
 Add-DistributionGroupMember -Identity "odoo-mail-senders" `
     -Member "odoo@example.com"
 
-# Restrict the Odoo app to that group.
 New-ApplicationAccessPolicy `
     -AppId <APP_CLIENT_ID> `
     -PolicyScopeGroupId "odoo-mail-senders@example.com" `
@@ -45,34 +40,15 @@ New-ApplicationAccessPolicy `
     -Description "Odoo outbound mail — restricted to odoo-mail-senders"
 ```
 
-Apply via the Exchange Online PowerShell module.
-
 ## Behaviour
 
-- **From address**: parsed from the MIME `From` header. Whatever Odoo set
-  goes into the URL path — no template-rewriting is done here.
-- **Sender fallback**: if Graph returns a sender-not-found error
-  (`ResourceNotFound`, `MailboxNotEnabled`, …), the send is retried once
-  with `ms_graph_default_sender`. A `ms_graph_send_fallback_sender` event is
-  logged each time this triggers.
-- **Transient errors**: HTTP 429 and 503 are retried inside the send by
-  `ms_graph_base` (see its README).
-- **Other errors** raise `MailDeliveryException`. `mail.mail` marks the mail
-  `exception` and the notification shows under *Sending Failures*; the mail
-  queue cron only sends `outgoing` mails, so a failed mail is resent from that
-  dialog. Same behaviour as the SMTP transport.
-- **Sent Items**: `saveToSentItems: true` — mails appear in the sender
-  mailbox's Outlook Sent Items unless mailbox policy overrides it.
-- **Message-Id**: reused from the incoming MIME message so threading in
-  recipient clients still works (Graph's `sendMail` returns no body).
-- **Attachments**: inlined as base64. Total Graph payload limit is ~4 MB;
-  larger attachments would need the upload-session flow (not implemented —
-  no current mail flow approaches this).
-
-## Logged events
-
-| event | when |
-| --- | --- |
-| `msgraph_mail_sent` | success |
-| `msgraph_send_failed` | non-recoverable failure (raised) |
-| `ms_graph_send_fallback_sender` | retried with default sender after a sender-not-found error |
+- **From address**: taken from the MIME `From` header as Odoo set it.
+- **Sender fallback**: on a sender-not-found error the send is retried once
+  with the default sender.
+- **Failures** raise `MailDeliveryException`, as with SMTP: the mail shows under
+  *Sending Failures* and is resent from that dialog, since the mail queue cron
+  only sends `outgoing` mails.
+- **Sent Items**: mails are saved to the sender mailbox's Sent Items unless
+  mailbox policy overrides it.
+- **Attachments** are inlined in the request, so a message is limited by the
+  Graph request size (about 4 MB); the upload-session flow is not implemented.

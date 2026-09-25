@@ -28,9 +28,9 @@ the page:
 | Setting | Parameter | Purpose |
 | --- | --- | --- |
 | Document Intelligence Endpoint | `azure_ai.di_endpoint` | Foundry resource root. Empty disables OCR. |
-| Analysis Timeout (s) | `azure_ai.di_timeout` | Wait budget per analysis (default 120) |
+| Analysis Timeout (s) | `azure_ai.di_timeout` | Wait budget per analysis |
 | Invoice Mailbox | `invoice_inbound.mailbox` | Mailbox UPN. Empty disables mailbox ingestion. |
-| Source Folder | `invoice_inbound.folder` | Well-known folder name or folder id (default `inbox`) |
+| Source Folder | `invoice_inbound.folder` | Well-known folder name or folder id |
 | Processed Folder | `invoice_inbound.processed_folder` | Where ingested mail is moved. Empty means mark read only. |
 
 Entra credentials are the `ms_graph.*` keys owned by `ms_graph_base`, shared
@@ -44,20 +44,17 @@ message is marked read and optionally moved.
 
 ## Scheduled actions
 
-Both are enabled on install and both no-op until configured.
-
-| Action | Every | Does |
-| --- | --- | --- |
-| Invoice Inbox: Fetch Mailbox | 15 min | Turns unread mail with a PDF or XML attachment into invoices |
-| Invoice Inbox: Extract Fields | 10 min | Runs OCR over invoices still pending |
+*Invoice Inbox: Fetch Mailbox* turns unread mail with a PDF or XML attachment
+into invoices; *Invoice Inbox: Extract Fields* runs OCR over pending invoices.
+Both are enabled on install and no-op until configured.
 
 ## Field extraction
 
 Two extractors, tried in that order:
 
-1. **E-invoice** — CII (ZUGFeRD 2.x, Factur-X, XRechnung CII) and UBL 2.1
-   (XRechnung UBL, Peppol BIS Billing 3.0), read from a standalone XML file or
-   from the XML embedded in a PDF/A-3. Local, no network, so it runs the moment
+1. **E-invoice** — CII (ZUGFeRD 2.x, Factur-X, XRechnung) and UBL (XRechnung,
+   Peppol BIS Billing), read from a standalone XML file or from the XML
+   embedded in a PDF/A-3. Local, no network, so it runs the moment
    the record is created and the upload comes back with its fields filled in.
    Confidence is always 1: the fields are read, not recognised.
 2. **Azure Document Intelligence** — everything else, via the
@@ -65,15 +62,9 @@ Two extractors, tried in that order:
    it is left to the *Extract Fields* cron. **Extract Again** on the form runs
    it on demand.
 
-Header fields filled by both: document type, vendor name, vendor VAT, invoice
-number, invoice date, due date, order reference, payment terms, IBAN, currency,
-untaxed amount, tax and total. E-invoices additionally give the payment
-reference.
-
-Line items are filled by both as well: description, product code, quantity,
-unit, unit price, tax rate and subtotal. Nothing is recomputed — quantity times
-unit price need not equal the subtotal, because a line may carry a discount or
-rounding it does not spell out.
+Both fill the header fields and the line items. Nothing is recomputed —
+quantity times unit price need not equal the subtotal, because a line may carry
+a discount or rounding it does not spell out.
 
 The **Unit** column spells out the UN/ECE Rec 20 code an e-invoice carries
 (`H87` reads as *piece*, `HUR` as *hour*). The raw code stays on the line as
@@ -89,10 +80,8 @@ legitimately, which is why it is a note and not an error.
 
 ### Credit notes
 
-- **E-invoice**: from the UNTDID 1001 type code (381 credit note, 261
-  self-billed, 396 factored) in CII and in a UBL `InvoiceTypeCode`, or from a
-  UBL `CreditNote` root element. UBL credit-note lines carry
-  `CreditedQuantity` rather than `InvoicedQuantity`; both are read.
+- **E-invoice**: from the UNTDID 1001 type code (`CREDIT_NOTE_CODES` in
+  `models/invoice_einvoice_parser.py`) or a UBL `CreditNote` root element.
 - **OCR**: `prebuilt-invoice` has no document-type field, so a credit note is
   recognised only by a negative total. Where the layout does not produce one,
   set **Document Type** by hand.
@@ -103,7 +92,8 @@ legitimately, which is why it is a note and not an error.
 ### Details
 
 - **Vendor matching**: after extraction the record is linked to a
-  `res.partner` matching on VAT (spaces stripped), then on an exact name. A
+  `res.partner` matching on VAT (spaces stripped), then on the name
+(case-insensitive). A
   vendor already set by hand is never replaced.
 - **Overwriting**: automatic extraction fills only empty fields, so a hand
   correction survives. **Extract Again** overwrites. Currency and document type
@@ -125,9 +115,8 @@ legitimately, which is why it is a note and not an error.
 
 ## Mailbox ingestion
 
-Every unread message in the source folder is examined. Attachments that are
-`application/pdf`, `application/xml` or `text/xml`, or end in `.pdf` / `.xml`,
-each become one invoice. Inline attachments are skipped.
+Every unread message in the source folder is examined. Each PDF or XML
+attachment becomes one invoice; inline attachments are skipped.
 
 - **Ordering**: the records are committed *before* the message is marked read.
   A crash between the two costs a re-fetch on the next run, not an invoice.
@@ -136,7 +125,7 @@ each become one invoice. Inline attachments are skipped.
 - **Failures**: a message that cannot be read is left unread and untouched, and
   the run continues with the next one. A failed mark-read means the message is
   not moved either, so the pair never comes apart.
-- **Batch**: 50 messages per run, and each message is committed on its own.
+- **Commits**: each message is committed on its own.
 - **Multi-company**: the mailbox is one global setting, so every ingested
   invoice lands in the cron user's company. Several companies feeding separate
   mailboxes are not supported.
@@ -156,27 +145,3 @@ without it ever having been validated.
 
 Records are visible only within the user's allowed companies. Opening the
 settings page additionally needs *Administration: Settings*.
-
-## Logged events
-
-| event | when |
-| --- | --- |
-| `invoice_inbound_message_processed` | a mail message was ingested and filed away |
-| `invoice_inbound_duplicate_skipped` | an attachment was already on file |
-| `invoice_inbound_ingest_failed` | a message could not be turned into invoices |
-| `invoice_inbound_fetch_failed` | the mailbox listing failed |
-| `invoice_inbound_file_away_failed` | marking read or moving failed after ingestion |
-| `invoice_inbound_extraction_failed` | OCR failed, or no invoice was recognised |
-| `invoice_inbound_einvoice_failed` | the e-invoice parser raised on a file |
-| `invoice_inbound_pdf_unreadable` | a PDF could not be opened to look for embedded XML |
-
-## Tests
-
-```bash
-odoo -d <db> -i invoice_inbound --test-enable \
-     --test-tags /invoice_inbound --stop-after-init
-```
-
-The suite mocks `ms.graph.mailbox` and `azure.document.intelligence`; it makes
-no network calls. E-invoice parsing is tested against CII and UBL documents and
-against PDFs built at test time.

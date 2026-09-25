@@ -9,10 +9,7 @@ AbstractModels:
 - `ms.graph.service` — `_graph_request` against `graph.microsoft.com`,
   authenticated through `ms.entra.auth`.
 
-Downstream addons (`mail_outbound_msgraph`, `mail_inbound_msgraph`) call the
-high-level methods they need and own no credentials.
-
-Requires `cryptography` and `PyJWT`, both present in the bundled image.
+Downstream addons own no credentials.
 
 ## Configuration
 
@@ -20,7 +17,7 @@ Requires `cryptography` and `PyJWT`, both present in the bundled image.
 
 | Key | Value |
 | --- | --- |
-| `ms_graph.auth_mode` | `client_secret` (default), `certificate`, `managed_identity` |
+| `ms_graph.auth_mode` | `client_secret`, `certificate`, `managed_identity`, `workload_identity` |
 | `ms_graph.tenant_id` | Tenant UUID or domain — secret and certificate modes |
 | `ms_graph.client_id` | App registration client UUID — secret and certificate modes |
 | `ms_graph.client_secret` | Client secret — secret mode |
@@ -29,14 +26,13 @@ Requires `cryptography` and `PyJWT`, both present in the bundled image.
 | `ms_graph.certificate_password` | Passphrase for an encrypted PEM key or a `.pfx` |
 | `ms_graph.managed_identity_client_id` | User-assigned identity client UUID; empty selects the system-assigned identity |
 | `ms_graph.federated_token_file` | Path to the projected token; overrides `AZURE_FEDERATED_TOKEN_FILE` — workload identity mode |
-| `ms_graph.authority` | Login endpoint, default `https://login.microsoftonline.com` |
+| `ms_graph.authority` | Login endpoint override |
 
 Keys the active mode does not use are ignored.
 
 ## Modes
 
-**`client_secret`** — one secret in the database, expires on the schedule Entra
-enforces (24 months maximum).
+**`client_secret`** — one secret in the database, which expires in Entra.
 
 **`certificate`** — no shared secret leaves the host when
 `ms_graph.certificate_path` points at a file readable only by the Odoo user.
@@ -125,61 +121,13 @@ in the tenant.
 
 ## Usage
 
-Graph, through the request helper:
+Downstream addons call `ms.graph.service._graph_request` for Graph and
+`ms.entra.auth._auth_headers(scope)` for any other Azure API; see `models/`.
 
-```python
-ok, body = self.env["ms.graph.service"]._graph_request(
-    "POST", f"/users/{upn}/sendMail", json_data=payload
-)
-```
-
-Any other Azure API, through the token service:
-
-```python
-auth = self.env["ms.entra.auth"]
-ok, headers = auth._auth_headers("https://vault.azure.net/.default")
-if ok:
-    resp = requests.get(f"{vault}/secrets/{name}?api-version=7.4", headers=headers)
-```
-
-| Method | Returns |
-| --- | --- |
-| `_get_token(scope)` | access token |
-| `_auth_headers(scope)` | `{"Authorization": "Bearer …"}` |
-| `_invalidate_token(scope=None)` | drops this worker's cached tokens |
-| `_graph_request(method, path, json_data=None, raw=False)` | decoded JSON, `{}` on 204, or bytes when `raw=True` |
-
-`scope` accepts either form — `https://graph.microsoft.com/.default` or the
-bare resource `https://graph.microsoft.com`; both are normalised per mode and
-share one cache entry.
-
-## Behaviour
-
-- **Return convention**: every method returns `(True, value)` or
-  `(False, error_message)`. The error is Microsoft's `error_description`
-  (token endpoint) or `error.message` (Graph) when the body is parseable JSON,
-  otherwise the raw exception string.
-- **Token cache**: per Odoo worker, keyed by mode, authority, tenant, client id
-  and scope, so several resources and a changed identity never share an entry.
-  A token is reused until 120 s before it expires. One acquisition runs at a
-  time per worker, so a burst of requests makes one token call.
-- **Retries**: `_graph_request` retries HTTP 429 and 503 twice, waiting
-  `Retry-After` (capped at 5 s) or 1 s, then 2 s. Graph has not processed a
-  request answered with either status, so POSTs are retried too. Other errors
-  and a third 429/503 surface to the caller.
-- **Azure Arc** managed identity is not supported; its challenge-response flow
+- `_graph_request` retries HTTP 429 and 503, POSTs included: Graph has not
+  processed a request answered with either status.
+- Azure Arc managed identity is not supported; its challenge-response flow
   needs a key file the Odoo user cannot read.
-
-## Logged events
-
-| event | when |
-| --- | --- |
-| `ms_entra_token_acquired` | token issued; carries mode, tenant, client id, scope, lifetime |
-| `ms_entra_token_failed` | acquisition failed; carries the same fields plus the error |
-| `ms_graph_request_retry` | a 429/503 response is retried; carries status and delay |
-| `ms_graph_request_failed` | a Graph request returned an error |
-
-Secrets, certificates and tokens are never logged.
 
 ## Neutralize
 
@@ -187,12 +135,3 @@ Secrets, certificates and tokens are never logged.
 `ms_graph.auth_mode` back to `client_secret`, so a neutralized copy — including
 one restored on the Azure host or in the AKS pod whose identity would otherwise
 still work — cannot authenticate against production Microsoft 365.
-
-## Tests
-
-```bash
-odoo -d <db> -i ms_graph_base --test-enable \
-     --test-tags /ms_graph_base --stop-after-init
-```
-
-The suite mocks `requests`; it makes no network calls.
