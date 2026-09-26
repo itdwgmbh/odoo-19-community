@@ -18,7 +18,7 @@ Tags: `latest`, the Odoo nightly version, and `sha-<commit>`.
 
 ## Configuration
 
-`generate_odoo_conf.py` maps each environment variable to its `odoo.conf` key and default. `DB_PASSWORD` accepts a `_FILE` variant for Docker secrets, which takes precedence. Set `ODOO_DB_MANAGER_JWT_AUDIENCE` to the canonical Odoo hostname to enable JWT-protected database management; see the database manager JWT addon README. With that server-wide addon loaded, `ODOO_MASTER_PASSWORD` is ignored.
+`generate_odoo_conf.py` maps each environment variable to its `odoo.conf` key and default. `DB_PASSWORD` and `ODOO_MASTER_PASSWORD` also accept a `_FILE` variant for Docker secrets, which takes precedence.
 
 A `*` after an `ODOO_ADDONS_PATH` entry marks an optional mount: Odoo skips it without warning while it holds no addon.
 

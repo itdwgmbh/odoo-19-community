@@ -14,7 +14,6 @@ services:
       - DB_USER=${DB_USER:-odoo}
       - DB_PASSWORD=${DB_PASSWORD:-odoo}
       - ODOO_MASTER_PASSWORD=${ODOO_MASTER_PASSWORD:-changeme}
-      - ODOO_DB_MANAGER_JWT_AUDIENCE=${ODOO_DB_MANAGER_JWT_AUDIENCE:-}
     volumes:
       - odoo-data:/var/lib/odoo
       - odoo-config:/etc/odoo
