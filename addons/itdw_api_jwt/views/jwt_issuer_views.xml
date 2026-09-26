@@ -35,6 +35,7 @@
         <field name="name">JWT Issuers</field>
         <field name="res_model">api.jwt.issuer</field>
         <field name="view_mode">list,form</field>
+        <field name="context">{'active_test': False}</field>
     </record>
     <menuitem id="menu_api_jwt_issuer" name="JWT Issuers"
               parent="base.menu_custom" action="action_api_jwt_issuer"

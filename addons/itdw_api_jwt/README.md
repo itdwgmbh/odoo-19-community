@@ -4,8 +4,8 @@ Adds JWTs to Odoo 19's `/json/2/` API. Existing API keys and browser sessions
 continue to use Odoo's native bearer authentication. The module does not issue
 tokens; an external issuer signs them.
 
-After installation, an Odoo administrator opens **Settings → Technical → JWT
-Issuers** and adds each trusted issuer. Set the exact JWT `iss`, the issuer's
+After installation, an Odoo administrator opens **Settings → JSON-2 API →
+Manage issuers** and adds each trusted issuer. Set the exact JWT `iss`, the issuer's
 HTTPS JWKS URL, and the claim containing the
 existing Odoo user's login. The default claim is `sub`; choose another claim
 when the issuer places the Odoo login elsewhere. No users are created by this

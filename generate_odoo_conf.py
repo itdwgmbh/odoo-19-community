@@ -2,6 +2,7 @@
 """Generate odoo.conf from environment variables."""
 
 import os
+import secrets
 import sys
 from configparser import ConfigParser
 
@@ -39,9 +40,14 @@ OPTIONS = [
         "/opt/odoo/src/addons,/opt/odoo-bundled-addons,/mnt/extra-addons*,/opt/odoo-customer-addons*",
     ),
     ("data_dir", "ODOO_DATA_DIR", "/var/lib/odoo"),
-    ("server_wide_modules", "ODOO_SERVER_WIDE_MODULES", "base,web,itdw_db_backup_age"),
+    (
+        "server_wide_modules",
+        "ODOO_SERVER_WIDE_MODULES",
+        "base,web,itdw_db_backup_age,itdw_db_manager_jwt",
+    ),
     # age public keys (comma/whitespace separated) for encrypted backups
     ("age_recipients", "ODOO_AGE_RECIPIENTS", ""),
+    ("db_manager_jwt_audience", "ODOO_DB_MANAGER_JWT_AUDIENCE", ""),
     # Server
     ("proxy_mode", "ODOO_PROXY_MODE", "True"),
     ("workers", "ODOO_WORKERS", "4"),
@@ -85,8 +91,19 @@ def generate_config(output_path="/etc/odoo/odoo.conf"):
         if value:
             config.set("options", key, value)
 
+    jwt_manager_enabled = "itdw_db_manager_jwt" in {
+        item.strip()
+        for item in config.get("options", "server_wide_modules", fallback="").split(",")
+    }
     for key, env_var, default in SECRET_OPTIONS:
-        value = get_env_or_file(env_var, default)
+        # The JWT manager does not accept a static master password. Give Odoo
+        # an undisclosed random one so its built-in insecure-password path is
+        # never entered, including on fresh installations.
+        value = (
+            secrets.token_urlsafe(48)
+            if key == "admin_passwd" and jwt_manager_enabled
+            else get_env_or_file(env_var, default)
+        )
         if value:
             config.set("options", key, value)
 

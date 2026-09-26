@@ -1,3 +1,4 @@
+import ast
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -164,3 +165,12 @@ class TestJwtAuthentication(HttpCase):
         )
         response = self._call(wrong_audience, jwks_url=issuer.jwks_url)
         self.assertEqual(response.status_code, 401, response.text)
+
+    def test_management_action_shows_disabled_issuer(self):
+        issuer = self.env.ref("itdw_api_jwt.issuer_itdw_gmbh")
+        action = self.env.ref("itdw_api_jwt.action_api_jwt_issuer")
+        context = ast.literal_eval(action.context)
+        self.assertIn(
+            issuer,
+            self.env["api.jwt.issuer"].with_context(**context).search([]),
+        )

@@ -1,6 +1,6 @@
 {
     "name": "IT-DW JSON-2 JWT Authentication",
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.1.0",
     "category": "Technical",
     "summary": "Accept signed JWTs on the JSON-2 API",
     "author": "IT-DW GmbH",
