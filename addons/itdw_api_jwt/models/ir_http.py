@@ -1,5 +1,6 @@
 import re
 from functools import lru_cache
+from urllib.parse import urlsplit
 
 import jwt
 from jwt import PyJWKClient
@@ -44,13 +45,21 @@ class IrHttp(models.AbstractModel):
             )
             if not issuers:
                 raise jwt.InvalidIssuerError("Untrusted issuer")
+            audience = issuers.audience
+            if not audience:
+                base_url = (
+                    request.env["ir.config_parameter"].sudo().get_param("web.base.url")
+                )
+                audience = urlsplit(base_url or "").hostname
+            if not audience:
+                raise jwt.InvalidAudienceError("Odoo hostname is not configured")
             key = _jwks_client(issuers.jwks_url).get_signing_key_from_jwt(token).key
             claims = jwt.decode(
                 token,
                 key,
                 algorithms=["RS256"],
                 issuer=issuers.issuer,
-                audience=issuers.audience,
+                audience=audience,
                 options={"require": ["exp", "iss", "aud"]},
             )
         except (jwt.PyJWTError, ValueError, TimeoutError, OSError) as exc:

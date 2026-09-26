@@ -37,7 +37,7 @@ class TestJwtAuthentication(HttpCase):
             claims, self.private_key, algorithm="RS256", headers={"kid": "test"}
         )
 
-    def _call(self, token):
+    def _call(self, token, jwks_url=None):
         with patch.object(ir_http, "_jwks_client") as client:
             client.return_value.get_signing_key_from_jwt.return_value = SimpleNamespace(
                 key=self.private_key.public_key()
@@ -52,7 +52,7 @@ class TestJwtAuthentication(HttpCase):
                 },
             )
             if client.called:
-                client.assert_called_with(self.jwks_url)
+                client.assert_called_with(jwks_url or self.jwks_url)
             return response
 
     def test_accepts_configured_claim_from_verified_issuer(self):
@@ -112,3 +112,38 @@ class TestJwtAuthentication(HttpCase):
         )
         response = self._call(key)
         self.assertEqual(response.status_code, 200, response.text)
+
+    def test_seeded_issuer_uses_odoo_hostname_as_audience(self):
+        issuer = self.env.ref("itdw_api_jwt.issuer_itdw_gmbh")
+        self.assertFalse(issuer.active)
+        self.assertEqual(issuer.jwks_url, "https://oidc.tailc6b0d.ts.net/jwks.json")
+        self.env["ir.config_parameter"].sudo().set_param(
+            "web.base.url", "https://odoo.example.test"
+        )
+        issuer.write({"active": True})
+        token = jwt.encode(
+            {
+                "iss": issuer.issuer,
+                "aud": "odoo.example.test",
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=5),
+                "sub": self.user.login,
+            },
+            self.private_key,
+            algorithm="RS256",
+            headers={"kid": "test"},
+        )
+        response = self._call(token, jwks_url=issuer.jwks_url)
+        self.assertEqual(response.status_code, 200, response.text)
+        wrong_audience = jwt.encode(
+            {
+                "iss": issuer.issuer,
+                "aud": "another.example.test",
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=5),
+                "sub": self.user.login,
+            },
+            self.private_key,
+            algorithm="RS256",
+            headers={"kid": "test"},
+        )
+        response = self._call(wrong_audience, jwks_url=issuer.jwks_url)
+        self.assertEqual(response.status_code, 401, response.text)

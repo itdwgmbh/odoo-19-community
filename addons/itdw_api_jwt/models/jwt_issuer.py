@@ -9,7 +9,10 @@ class JwtIssuer(models.Model):
     name = fields.Char(required=True)
     active = fields.Boolean(default=True)
     issuer = fields.Char(string="Issuer (iss)", required=True)
-    audience = fields.Char(string="Audience (aud)", required=True)
+    audience = fields.Char(
+        string="Audience (aud)",
+        help="Leave empty to use the hostname of Odoo's web.base.url.",
+    )
     jwks_url = fields.Char(string="JWKS URL", required=True)
     user_claim = fields.Char(
         string="Odoo login claim",

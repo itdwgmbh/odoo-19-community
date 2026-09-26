@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo noupdate="1">
+    <record id="issuer_itdw_gmbh" model="api.jwt.issuer">
+        <field name="name">IT-DW GmbH</field>
+        <field name="active" eval="False"/>
+        <field name="issuer">https://oidc.tailc6b0d.ts.net</field>
+        <field name="jwks_url">https://oidc.tailc6b0d.ts.net/jwks.json</field>
+    </record>
+</odoo>
