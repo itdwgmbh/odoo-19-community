@@ -29,8 +29,8 @@ fetch triggers at most one new fetch per JWKS URL every 30 seconds, so a newly
 rotated key is accepted within 30 seconds and a removed key stops working
 within 5 minutes.
 
-The bundled **IT-DW GmbH** issuer starts disabled with its issuer and JWKS URL
-prefilled. Confirm the claim containing the Odoo login before enabling it.
+The bundled **IT-DW GmbH** issuer is active on install; its `sub` claim carries
+the Odoo login.
 
 In **Settings → API Authentication**, enable **Require JWTs for bearer routes**
 to reject API keys and browser sessions on every bearer route. The switch is

@@ -174,7 +174,30 @@ class TestJwtAuthentication(HttpCase):
         self.assertEqual(self._call(self._token()).status_code, 200)
 
     def test_deprecated_rpc_endpoints_are_disabled(self):
-        for path in ("/jsonrpc", "/xmlrpc/common", "/xmlrpc/2/common"):
+        response = self.url_open(
+            "/jsonrpc",
+            data=json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "method": "call",
+                    "params": {"service": "common", "method": "version", "args": []},
+                }
+            ),
+            headers={
+                "Content-Type": "application/json",
+                "X-Odoo-Database": self.env.cr.dbname,
+            },
+        )
+        self.assertEqual(response.json()["error"]["code"], 404, response.text)
+        body = "<?xml version='1.0'?><methodCall><methodName>version</methodName></methodCall>"
+        for path in ("/xmlrpc/common", "/xmlrpc/2/common"):
             with self.subTest(path):
-                response = self.url_open(path, data="{}")
+                response = self.url_open(
+                    path,
+                    data=body,
+                    headers={
+                        "Content-Type": "text/xml",
+                        "X-Odoo-Database": self.env.cr.dbname,
+                    },
+                )
                 self.assertEqual(response.status_code, 404, response.text)
