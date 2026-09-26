@@ -21,3 +21,7 @@ Only RS256 tokens with valid signatures, expiration, issuer, and audience are
 accepted. Send them as `Authorization: Bearer <JWT>`, along with Odoo's usual
 `X-Odoo-Database` header when database selection requires it. The mapped user
 must be active and have the Odoo permissions needed for the requested model method.
+
+In **Settings → JSON-2 API**, enable **Require JWTs for JSON-2** to reject
+native API keys and browser sessions on `/json/2/`. The switch is off by
+default; other bearer-authenticated routes are unaffected.

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.itdw.api.jwt</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app string="JSON-2 API" name="itdw_api_jwt" groups="base.group_system">
+                    <block title="Authentication">
+                        <setting id="api_jwt_only_setting" string="Require JWTs for JSON-2"
+                                 help="Reject API keys and browser sessions on /json/2/.">
+                            <field name="api_jwt_only"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>

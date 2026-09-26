@@ -113,6 +113,23 @@ class TestJwtAuthentication(HttpCase):
         response = self._call(key)
         self.assertEqual(response.status_code, 200, response.text)
 
+    def test_jwt_only_setting_rejects_native_api_keys(self):
+        key = (
+            self.user.with_user(self.user)
+            .env["res.users.apikeys"]
+            ._generate(
+                scope="rpc",
+                name="test",
+                expiration_date=datetime.now(timezone.utc).replace(tzinfo=None)
+                + timedelta(minutes=5),
+            )
+        )
+        self.env["res.config.settings"].create({"api_jwt_only": True}).set_values()
+        response = self._call(key)
+        self.assertEqual(response.status_code, 401, response.text)
+        response = self._call(self._token())
+        self.assertEqual(response.status_code, 200, response.text)
+
     def test_seeded_issuer_uses_odoo_hostname_as_audience(self):
         issuer = self.env.ref("itdw_api_jwt.issuer_itdw_gmbh")
         self.assertFalse(issuer.active)

@@ -7,6 +7,7 @@ from jwt import PyJWKClient
 from odoo import models
 from odoo.exceptions import AccessDenied
 from odoo.http import request
+from odoo.tools.misc import str2bool
 from werkzeug.datastructures import WWWAuthenticate
 from werkzeug.exceptions import Unauthorized
 
@@ -28,9 +29,16 @@ class IrHttp(models.AbstractModel):
         header = request.httprequest.headers.get("Authorization", "")
         match = _BEARER.match(header)
         token = match.group(1) if match else ""
-        if not (
-            request.httprequest.path.startswith("/json/2/") and token.count(".") == 2
-        ):
+        if not request.httprequest.path.startswith("/json/2/"):
+            return super()._auth_method_bearer()
+        if token.count(".") != 2:
+            jwt_only = (
+                request.env["ir.config_parameter"].sudo().get_param("api_jwt.jwt_only")
+            )
+            if str2bool(jwt_only, False):
+                raise Unauthorized(
+                    "A JWT is required", www_authenticate=WWWAuthenticate("bearer")
+                )
             return super()._auth_method_bearer()
 
         try:
