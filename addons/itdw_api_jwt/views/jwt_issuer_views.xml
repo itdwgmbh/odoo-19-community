@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_api_jwt_issuer_list" model="ir.ui.view">
+        <field name="name">api.jwt.issuer.list</field>
+        <field name="model">api.jwt.issuer</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="issuer"/>
+                <field name="audience"/>
+                <field name="user_claim"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_api_jwt_issuer_form" model="ir.ui.view">
+        <field name="name">api.jwt.issuer.form</field>
+        <field name="model">api.jwt.issuer</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="active"/>
+                        <field name="issuer"/>
+                        <field name="audience"/>
+                        <field name="jwks_url"/>
+                        <field name="user_claim"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_api_jwt_issuer" model="ir.actions.act_window">
+        <field name="name">JWT Issuers</field>
+        <field name="res_model">api.jwt.issuer</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_api_jwt_issuer" name="JWT Issuers"
+              parent="base.menu_custom" action="action_api_jwt_issuer"
+              groups="base.group_system"/>
+</odoo>
