@@ -4,15 +4,11 @@ from odoo.exceptions import ValidationError
 
 class JwtIssuer(models.Model):
     _name = "api.jwt.issuer"
-    _description = "Trusted JWT issuer for the JSON-2 API"
+    _description = "Trusted JWT issuer for bearer authentication"
 
     name = fields.Char(required=True)
     active = fields.Boolean(default=True)
     issuer = fields.Char(string="Issuer (iss)", required=True)
-    audience = fields.Char(
-        string="Audience (aud)",
-        help="Leave empty to use the hostname of Odoo's web.base.url.",
-    )
     jwks_url = fields.Char(string="JWKS URL", required=True)
     user_claim = fields.Char(
         string="Odoo login claim",

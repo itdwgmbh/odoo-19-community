@@ -6,16 +6,16 @@
         <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
-                <app string="JSON-2 API" name="itdw_api_jwt" groups="base.group_system"
+                <app string="API Authentication" name="itdw_api_jwt" groups="base.group_system"
                      logo="/itdw_api_jwt/static/description/icon.png">
                     <block title="Authentication">
                         <setting id="api_jwt_issuers_setting" string="Trusted JWT issuers"
-                                 help="Configure signing keys, audiences and Odoo user claims.">
+                                 help="Configure issuers, their signing keys and the claim holding the Odoo login.">
                             <button name="%(itdw_api_jwt.action_api_jwt_issuer)d" type="action"
                                     string="Manage issuers" class="btn-link"/>
                         </setting>
-                        <setting id="api_jwt_only_setting" string="Require JWTs for JSON-2"
-                                 help="Reject API keys and browser sessions on /json/2/.">
+                        <setting id="api_jwt_only_setting" string="Require JWTs for bearer routes"
+                                 help="Reject API keys and browser sessions on routes that use bearer authentication.">
                             <field name="api_jwt_only"/>
                         </setting>
                     </block>

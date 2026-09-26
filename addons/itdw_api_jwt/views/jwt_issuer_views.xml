@@ -7,7 +7,6 @@
             <list>
                 <field name="name"/>
                 <field name="issuer"/>
-                <field name="audience"/>
                 <field name="user_claim"/>
                 <field name="active"/>
             </list>
@@ -23,7 +22,6 @@
                         <field name="name"/>
                         <field name="active"/>
                         <field name="issuer"/>
-                        <field name="audience"/>
                         <field name="jwks_url"/>
                         <field name="user_claim"/>
                     </group>

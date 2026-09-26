@@ -1,12 +1,12 @@
 {
-    "name": "IT-DW JSON-2 JWT Authentication",
-    "version": "19.0.1.1.0",
+    "name": "IT-DW JWT API Authentication",
+    "version": "19.0.2.0.0",
     "category": "Technical",
-    "summary": "Accept signed JWTs on the JSON-2 API",
+    "summary": "Accept signed JWTs as bearer tokens and disable XML-RPC and JSON-RPC",
     "author": "IT-DW GmbH",
     "license": "LGPL-3",
     "depends": ["rpc"],
-    "external_dependencies": {"python": ["jwt", "cryptography"]},
+    "external_dependencies": {"python": ["PyJWT", "cryptography"]},
     "data": [
         "security/ir.model.access.csv",
         "data/jwt_issuer.xml",
