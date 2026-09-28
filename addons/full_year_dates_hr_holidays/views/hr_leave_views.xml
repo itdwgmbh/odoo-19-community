@@ -38,6 +38,18 @@
             <xpath expr="//div[hasclass('o_hr_holidays_name')]/div[hasclass('d-flex')]" position="attributes">
                 <attribute name="class" remove="d-flex flex-row" add="d-block" separator=" "/>
             </xpath>
+            <xpath expr="//div[hasclass('o_hr_holidays_name')]//t[contains(@t-out, 'request_date_from.raw_value')]" position="replace">
+                <span class="text-nowrap" t-out="luxon.DateTime.fromISO(record.request_date_from.raw_value).toLocaleString({ year: 'numeric', month: 'short', day: 'numeric' })"/>
+            </xpath>
+            <xpath expr="//div[hasclass('o_hr_holidays_name')]//t[contains(@t-out, 'request_date_to.raw_value')]" position="replace">
+                <span class="text-nowrap" t-out="luxon.DateTime.fromISO(record.request_date_to.raw_value).toLocaleString({ year: 'numeric', month: 'short', day: 'numeric' })"/>
+            </xpath>
+            <xpath expr="//div[hasclass('o_hr_holidays_name')]//t[contains(@t-out, 'request_date_to.raw_value')]" position="replace">
+                <span class="text-nowrap" t-out="luxon.DateTime.fromISO(record.request_date_to.raw_value).toLocaleString({ year: 'numeric', month: 'short', day: 'numeric' })"/>
+            </xpath>
+            <xpath expr="//div[hasclass('o_hr_holidays_name')]//t[contains(@t-out, 'request_date_to.raw_value')]" position="replace">
+                <span class="text-nowrap" t-out="luxon.DateTime.fromISO(record.request_date_to.raw_value).toLocaleString({ year: 'numeric', month: 'short', day: 'numeric' })"/>
+            </xpath>
             <xpath expr="//div[@id='date_part']" position="attributes">
                 <attribute name="class" remove="d-flex flex-row" add="d-block" separator=" "/>
             </xpath>
