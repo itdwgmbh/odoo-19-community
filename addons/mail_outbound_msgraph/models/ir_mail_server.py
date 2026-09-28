@@ -16,6 +16,7 @@ _SENDER_NOT_FOUND_MARKERS = (
     "MailboxNotEnabled",
     "does not exist",
     "Object Not Found",
+    "is invalid",
 )
 
 

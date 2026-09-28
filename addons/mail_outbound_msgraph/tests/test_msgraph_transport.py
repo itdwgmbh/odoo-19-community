@@ -138,19 +138,24 @@ class TestMsGraphTransport(TransactionCase):
         self.assertEqual(method, "POST")
         self.assertEqual(path, "/users/alice@example.com/sendMail")
 
-    def test_msgraph_fallback_sender_on_resource_not_found(self):
-        msg = _build_message()
-        responses = iter([(False, "ResourceNotFound: mailbox missing"), (True, {})])
-        with patch.object(
-            type(self.env["ms.graph.service"]),
-            "_graph_request",
-            side_effect=lambda *a, **kw: next(responses),
-        ) as graph:
-            self.server.send_email(msg)
-        self.assertEqual(graph.call_count, 2)
-        self.assertEqual(
-            graph.call_args_list[1].args[1], "/users/odoo@example.com/sendMail"
+    def test_msgraph_fallback_sender_when_sender_is_no_mailbox(self):
+        errors = (
+            "ResourceNotFound: mailbox missing",
+            "The requested user 'alice@example.com' is invalid.",
         )
+        for error in errors:
+            with self.subTest(error=error):
+                responses = iter([(False, error), (True, {})])
+                with patch.object(
+                    type(self.env["ms.graph.service"]),
+                    "_graph_request",
+                    side_effect=lambda *a, **kw: next(responses),
+                ) as graph:
+                    self.server.send_email(_build_message())
+                self.assertEqual(graph.call_count, 2)
+                self.assertEqual(
+                    graph.call_args_list[1].args[1], "/users/odoo@example.com/sendMail"
+                )
 
     def test_mail_mail_send_routes_through_graph(self):
         # A mail without an explicit server goes through mail.mail.send(),
