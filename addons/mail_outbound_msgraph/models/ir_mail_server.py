@@ -24,7 +24,7 @@ def _addresses(recipients):
 
 
 class _MsGraphSession:
-    """Sentinel handed back from connect() for msgraph servers.
+    """Sentinel handed back from _connect__() for msgraph servers.
 
     mail.mail.send() expects an smtp_session it can later .quit() — this
     no-op object lets that path work without opening an SMTP connection.
@@ -131,7 +131,7 @@ class IrMailServer(models.Model):
     # Transport routing
     # ------------------------------------------------------------------
 
-    def connect(self, *args, **kwargs):
+    def _connect__(self, *args, **kwargs):  # noqa: PLW3201
         mail_server_id = kwargs.get("mail_server_id")
         if mail_server_id:
             server = self.sudo().browse(mail_server_id)
@@ -145,7 +145,7 @@ class IrMailServer(models.Model):
             resolved, _from = self.sudo()._find_mail_server(smtp_from)
             if resolved and resolved.delivery_method == "msgraph":
                 return _MsGraphSession(resolved)
-        return super().connect(*args, **kwargs)
+        return super()._connect__(*args, **kwargs)
 
     def send_email(self, message, mail_server_id=None, smtp_session=None, **kwargs):
         # Trust the session first: mail.mail._send passes mail_server_id from
