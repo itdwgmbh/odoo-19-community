@@ -1,6 +1,6 @@
 {
     "name": "Full Year Dates for Time Off",
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.0.1",
     "category": "Tools",
     "summary": "Show the year on Time Off approval cards",
     "author": "IT-DW GmbH",

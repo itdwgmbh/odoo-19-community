@@ -35,6 +35,12 @@
             <xpath expr="//div[hasclass('o_hr_holidays_value')]/div[hasclass('o_hr_holidays_name')]" position="attributes">
                 <attribute name="class" remove="col-2" add="col-3" separator=" "/>
             </xpath>
+            <xpath expr="//div[hasclass('o_hr_holidays_name')]/div[hasclass('d-flex')]" position="attributes">
+                <attribute name="class" remove="d-flex flex-row" add="d-block" separator=" "/>
+            </xpath>
+            <xpath expr="//div[@id='date_part']" position="attributes">
+                <attribute name="class" remove="d-flex flex-row" add="d-block" separator=" "/>
+            </xpath>
         </field>
     </record>
 </odoo>
