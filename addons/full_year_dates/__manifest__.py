@@ -1,6 +1,6 @@
 {
     "name": "Full Year Dates",
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.0.1",
     "category": "Tools",
     "summary": "Show the year in backend dates and chatter timestamps",
     "author": "IT-DW GmbH",

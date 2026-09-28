@@ -1,7 +1,12 @@
 import { patch } from "@web/core/utils/patch";
 import { registry } from "@web/core/registry";
 import { user } from "@web/core/user";
-import { dateField, dateTimeField } from "@web/views/fields/datetime/datetime_field";
+import { dateField, dateRangeField, dateTimeField } from "@web/views/fields/datetime/datetime_field";
+import {
+    listDateField,
+    listDateRangeField,
+    listDateTimeField,
+} from "@web/views/fields/datetime/list_datetime_field";
 import { formatDate, formatDateTime } from "@web/views/fields/formatters";
 import { Message } from "@mail/core/common/message_model";
 
@@ -16,7 +21,14 @@ registry.category("formatters")
     .add("date", numericByDefault(formatDate), { force: true })
     .add("datetime", numericByDefault(formatDateTime), { force: true });
 
-for (const field of [dateField, dateTimeField]) {
+for (const field of [
+    dateField,
+    dateRangeField,
+    dateTimeField,
+    listDateField,
+    listDateRangeField,
+    listDateTimeField,
+]) {
     patch(field, {
         extractProps({ options, ...rest }, dynamicInfo) {
             return super.extractProps({ options: { numeric: true, ...options }, ...rest }, dynamicInfo);
