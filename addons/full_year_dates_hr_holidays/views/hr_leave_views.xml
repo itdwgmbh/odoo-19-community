@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <record id="hr_leave_view_form_full_year" model="ir.ui.view">
+        <field name="name">hr.leave.view.form.full.year</field>
+        <field name="model">hr.leave</field>
+        <field name="inherit_id" ref="hr_holidays.hr_leave_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@id='full_date']" position="attributes">
+                <attribute name="class" add="flex-wrap gap-1" separator=" "/>
+            </xpath>
+            <xpath expr="//div[@id='full_date']/field[@name='request_date_from']" position="attributes">
+                <attribute name="class" add="flex-shrink-0" separator=" "/>
+                <attribute name="style">min-width: max-content;</attribute>
+            </xpath>
+            <xpath expr="//div[@id='full_date']/div" position="attributes">
+                <attribute name="style">min-width: max-content;</attribute>
+            </xpath>
+        </field>
+    </record>
     <record id="hr_leave_view_kanban_full_year" model="ir.ui.view">
         <field name="name">hr.leave.view.kanban.full.year</field>
         <field name="model">hr.leave</field>
