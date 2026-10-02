@@ -26,7 +26,7 @@ The IT-DW addons are bundled under `/opt/odoo-bundled-addons`; each has a README
 
 ## Supply chain
 
-Published images carry an SBOM and SLSA provenance attestation, a keyless cosign signature, and a Trivy scan in the repo Security tab.
+Published images carry an SBOM and SLSA provenance attestation, and a keyless cosign signature.
 
 ```bash
 cosign verify \
