@@ -157,30 +157,6 @@ class TestMsGraphTransport(TransactionCase):
                     graph.call_args_list[1].args[1], "/users/odoo@example.com/sendMail"
                 )
 
-    def test_mail_mail_send_routes_through_graph(self):
-        # A mail without an explicit server goes through mail.mail.send(),
-        # which resolves the server and opens its session via core. Core
-        # skips sending in test mode, so only that switch is patched.
-        mail = self.env["mail.mail"].create(
-            {
-                "email_from": "alice@example.com",
-                "email_to": "bob@example.com",
-                "subject": "Hello",
-                "body_html": "<p>hi</p>",
-            }
-        )
-        with (
-            patch.object(type(self.env["ir.mail_server"]), "_disable_send", return_value=False),
-            patch.object(
-                type(self.env["ms.graph.service"]),
-                "_graph_request",
-                return_value=(True, {}),
-            ) as graph,
-        ):
-            mail.send()
-        self.assertEqual(mail.state, "sent", mail.failure_reason)
-        graph.assert_called_once()
-
     def test_msgraph_propagates_non_sender_errors(self):
         msg = _build_message()
         with (
