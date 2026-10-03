@@ -71,6 +71,7 @@ RUN apt-get update && \
     python3-dateutil \
     python3-docutils \
     python3-docx \
+    python3-fonttools \
     python3-gevent \
     python3-greenlet \
     python3-idna \
