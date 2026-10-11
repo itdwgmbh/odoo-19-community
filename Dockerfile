@@ -103,6 +103,7 @@ RUN apt-get update && \
     python3-stdnum \
     python3-tz \
     python3-urllib3 \
+    python3-vobject \
     python3-werkzeug \
     python3-zeep \
     python3-xlsxwriter \
